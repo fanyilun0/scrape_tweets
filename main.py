@@ -1,5 +1,7 @@
 import re
 import time
+import csv
+from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -88,10 +90,45 @@ tweet_urls = re.findall(r'https://x\.com/\w+/status/\d+', original_text)
 print(f"检测到 {len(tweet_urls)} 条推文链接。")
 
 # 2. 初始化Selenium WebDriver
-# webdriver-manager会自动下载并配置匹配你Chrome版本的ChromeDriver
 print("正在启动浏览器...")
-service = ChromeService(executable_path=ChromeDriverManager().install())
-driver = webdriver.Chrome(service=service)
+
+# 尝试多种方式启动浏览器，避免SSL错误
+driver = None
+try:
+    # 方法1: 尝试使用webdriver-manager（可能遇到SSL问题）
+    print("尝试方法1: 使用webdriver-manager自动下载ChromeDriver...")
+    service = ChromeService(executable_path=ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service)
+    print("✓ 方法1成功")
+except Exception as e:
+    print(f"× 方法1失败: {e}")
+    
+    try:
+        # 方法2: 直接使用系统中已安装的ChromeDriver
+        print("\n尝试方法2: 使用系统已安装的ChromeDriver...")
+        driver = webdriver.Chrome()
+        print("✓ 方法2成功")
+    except Exception as e2:
+        print(f"× 方法2失败: {e2}")
+        
+        try:
+            # 方法3: 使用Chrome的无头模式选项
+            print("\n尝试方法3: 使用Chrome选项启动...")
+            chrome_options = webdriver.ChromeOptions()
+            chrome_options.add_argument('--no-sandbox')
+            chrome_options.add_argument('--disable-dev-shm-usage')
+            driver = webdriver.Chrome(options=chrome_options)
+            print("✓ 方法3成功")
+        except Exception as e3:
+            print(f"× 方法3失败: {e3}")
+            print("\n所有方法都失败了。请尝试以下解决方案:")
+            print("1. 手动下载ChromeDriver: https://chromedriver.chromium.org/downloads")
+            print("2. 或使用brew安装: brew install chromedriver")
+            print("3. 或检查网络连接和SSL证书")
+            raise RuntimeError("无法启动Chrome浏览器")
+
+if driver is None:
+    raise RuntimeError("无法启动Chrome浏览器")
 
 try:
     # 3. 手动登录
@@ -156,5 +193,32 @@ finally:
     print("所有抓取任务完成，关闭浏览器。")
     driver.quit()
 
-# 你可以在这里对 all_tweets_data 做进一步处理，比如保存到文件
-# print(all_tweets_data)
+# 6. 保存数据到CSV文件
+if all_tweets_data:
+    # 生成文件名(带时间戳)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    csv_filename = f"tweets_data_{timestamp}.csv"
+    
+    print(f"\n开始保存数据到CSV文件: {csv_filename}")
+    
+    # 写入CSV文件
+    with open(csv_filename, 'w', newline='', encoding='utf-8-sig') as csvfile:
+        fieldnames = ['序号', '推文链接', '作者', '用户名', '推文内容']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        
+        # 写入表头
+        writer.writeheader()
+        
+        # 写入数据
+        for idx, tweet in enumerate(all_tweets_data, 1):
+            writer.writerow({
+                '序号': idx,
+                '推文链接': tweet['url'],
+                '作者': tweet['author'],
+                '用户名': tweet['handle'],
+                '推文内容': tweet['text']
+            })
+    
+    print(f"成功保存 {len(all_tweets_data)} 条推文数据到 {csv_filename}")
+else:
+    print("\n未抓取到任何推文数据,未生成CSV文件。")
