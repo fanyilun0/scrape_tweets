@@ -1,6 +1,8 @@
 import re
 import time
 import csv
+import os
+import requests
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -8,6 +10,7 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 
 # 你提供的包含推文链接的原始文本
 original_text = """
@@ -143,42 +146,134 @@ try:
     
     all_tweets_data = []
 
-    # 4. 循环访问每个URL并抓取内容
+    # 4. 创建图片保存目录
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    images_dir = f"tweets_images_{timestamp}"
+    os.makedirs(images_dir, exist_ok=True)
+    
+    # 5. 循环访问每个URL并抓取内容
     for i, url in enumerate(tweet_urls):
         print(f"--- 正在抓取第 {i+1}/{len(tweet_urls)} 条: {url} ---")
         try:
             driver.get(url)
             
-            # 等待推文内容加载出来。我们等待一个关键元素出现，这里用 'article' 标签。
-            # X使用 'data-testid' 属性来标识元素，这比CSS类名更稳定。
-            # 我们等待包含 'tweet' 的 'article' 元素出现，最多等15秒。
+            # 等待推文内容加载出来
             wait = WebDriverWait(driver, 15)
             tweet_article = wait.until(
                 EC.presence_of_element_located((By.XPATH, "//article[@data-testid='tweet']"))
             )
             
             # 提取推文正文
-            # 推文文本通常在 'data-testid' 为 'tweetText' 的元素内
-            tweet_text_element = tweet_article.find_element(By.XPATH, ".//div[@data-testid='tweetText']")
-            tweet_text = tweet_text_element.text
-            
-            # 提取作者信息
-            author_name_element = tweet_article.find_element(By.XPATH, ".//div[@data-testid='User-Name']//span")
-            author_name = author_name_element.text
+            try:
+                tweet_text_element = tweet_article.find_element(By.XPATH, ".//div[@data-testid='tweetText']")
+                tweet_text = tweet_text_element.text
+            except NoSuchElementException:
+                tweet_text = ""
             
             # 提取用户名（@handle）
-            user_handle_element = tweet_article.find_element(By.XPATH, ".//div[@data-testid='User-Name']//div[contains(@class, 'r-1wbh5a2')]")
-            user_handle = user_handle_element.text
+            try:
+                user_handle_element = tweet_article.find_element(By.XPATH, ".//div[@data-testid='User-Name']//a[contains(@href, '/')]")
+                user_handle = user_handle_element.get_attribute('href').split('/')[-1]
+                user_handle = f"@{user_handle}"
+            except NoSuchElementException:
+                user_handle = ""
             
-            print(f"作者: {author_name} ({user_handle})")
-            print(f"内容:\n{tweet_text}\n")
+            # 提取推文时间
+            tweet_time = ""
+            try:
+                time_element = tweet_article.find_element(By.XPATH, ".//time")
+                tweet_time = time_element.get_attribute('datetime')
+                # 格式化时间为更易读的格式
+                if tweet_time:
+                    dt = datetime.fromisoformat(tweet_time.replace('Z', '+00:00'))
+                    tweet_time = dt.strftime('%Y-%m-%d %H:%M:%S')
+            except NoSuchElementException:
+                pass
+            
+            # 提取图片（点击获取大图）
+            image_urls = []
+            try:
+                # 查找所有图片元素
+                image_elements = tweet_article.find_elements(By.XPATH, ".//div[@data-testid='tweetPhoto']//img")
+                
+                for img_idx, img_element in enumerate(image_elements):
+                    try:
+                        # 点击图片打开大图查看器
+                        img_element.click()
+                        time.sleep(1.5)  # 等待大图加载
+                        
+                        # 查找大图元素
+                        try:
+                            large_img = WebDriverWait(driver, 5).until(
+                                EC.presence_of_element_located((By.XPATH, "//img[@alt='Image']"))
+                            )
+                            img_url = large_img.get_attribute('src')
+                            
+                            # 如果获取的是原图链接，替换为更高清版本
+                            if img_url and 'name=' in img_url:
+                                img_url = re.sub(r'name=\w+', 'name=orig', img_url)
+                            
+                            if img_url and img_url not in image_urls:
+                                image_urls.append(img_url)
+                                
+                                # 下载图片
+                                try:
+                                    img_response = requests.get(img_url, timeout=10)
+                                    if img_response.status_code == 200:
+                                        # 从URL中提取文件扩展名
+                                        ext = 'jpg'
+                                        if '.png' in img_url:
+                                            ext = 'png'
+                                        elif '.gif' in img_url:
+                                            ext = 'gif'
+                                        
+                                        img_filename = f"tweet_{i+1}_img_{img_idx+1}.{ext}"
+                                        img_path = os.path.join(images_dir, img_filename)
+                                        
+                                        with open(img_path, 'wb') as f:
+                                            f.write(img_response.content)
+                                        print(f"  ✓ 已保存图片: {img_filename}")
+                                except Exception as download_error:
+                                    print(f"  × 下载图片失败: {download_error}")
+                            
+                            # 关闭大图查看器（按ESC或点击关闭按钮）
+                            try:
+                                close_button = driver.find_element(By.XPATH, "//div[@aria-label='Close' or @data-testid='app-bar-close']")
+                                close_button.click()
+                            except:
+                                driver.back()
+                                driver.forward()
+                            
+                            time.sleep(0.5)
+                            
+                        except TimeoutException:
+                            print(f"  × 未能加载大图")
+                            # 尝试关闭可能打开的弹窗
+                            try:
+                                driver.back()
+                            except:
+                                pass
+                            
+                    except Exception as click_error:
+                        print(f"  × 点击图片失败: {click_error}")
+                        continue
+                        
+            except NoSuchElementException:
+                pass  # 该推文没有图片
+            
+            print(f"用户名: {user_handle}")
+            print(f"发布时间: {tweet_time}")
+            print(f"内容:\n{tweet_text}")
+            print(f"图片数量: {len(image_urls)}\n")
             
             # 将抓取的数据存起来
             all_tweets_data.append({
                 "url": url,
-                "author": author_name,
                 "handle": user_handle,
-                "text": tweet_text
+                "time": tweet_time,
+                "text": tweet_text,
+                "images": image_urls,
+                "image_count": len(image_urls)
             })
 
             # 增加一个小的随机延时，模仿人类行为，降低被封锁的风险
@@ -193,17 +288,15 @@ finally:
     print("所有抓取任务完成，关闭浏览器。")
     driver.quit()
 
-# 6. 保存数据到CSV文件
+# 6. 保存数据到CSV和Markdown文件
 if all_tweets_data:
-    # 生成文件名(带时间戳)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     csv_filename = f"tweets_data_{timestamp}.csv"
+    md_filename = f"tweets_data_{timestamp}.md"
     
+    # 保存CSV文件
     print(f"\n开始保存数据到CSV文件: {csv_filename}")
-    
-    # 写入CSV文件
     with open(csv_filename, 'w', newline='', encoding='utf-8-sig') as csvfile:
-        fieldnames = ['序号', '推文链接', '作者', '用户名', '推文内容']
+        fieldnames = ['序号', '用户名', '发布时间', '推文链接', '推文内容', '图片数量', '图片URL']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         
         # 写入表头
@@ -211,14 +304,79 @@ if all_tweets_data:
         
         # 写入数据
         for idx, tweet in enumerate(all_tweets_data, 1):
+            # 将图片URL列表转为字符串
+            images_str = '; '.join(tweet['images']) if tweet['images'] else ''
+            
             writer.writerow({
                 '序号': idx,
-                '推文链接': tweet['url'],
-                '作者': tweet['author'],
                 '用户名': tweet['handle'],
-                '推文内容': tweet['text']
+                '发布时间': tweet['time'],
+                '推文链接': tweet['url'],
+                '推文内容': tweet['text'],
+                '图片数量': tweet['image_count'],
+                '图片URL': images_str
             })
     
-    print(f"成功保存 {len(all_tweets_data)} 条推文数据到 {csv_filename}")
+    print(f"✓ 成功保存 {len(all_tweets_data)} 条推文数据到 {csv_filename}")
+    
+    # 保存Markdown文件
+    print(f"\n开始生成Markdown文档: {md_filename}")
+    with open(md_filename, 'w', encoding='utf-8') as mdfile:
+        # 写入标题
+        mdfile.write(f"# 推文合集\n\n")
+        mdfile.write(f"**抓取时间**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+        mdfile.write(f"**推文总数**: {len(all_tweets_data)} 条\n\n")
+        mdfile.write("---\n\n")
+        
+        # 写入每条推文
+        for idx, tweet in enumerate(all_tweets_data, 1):
+            mdfile.write(f"## {idx}. 推文 - {tweet['handle']}\n\n")
+            
+            # 基本信息
+            mdfile.write(f"**发布时间**: {tweet['time']}\n\n")
+            mdfile.write(f"**推文链接**: [{tweet['url']}]({tweet['url']})\n\n")
+            
+            # 推文内容
+            if tweet['text']:
+                mdfile.write(f"**内容**:\n\n")
+                # 处理推文内容中的换行，使其在Markdown中正确显示
+                content_lines = tweet['text'].split('\n')
+                for line in content_lines:
+                    if line.strip():
+                        mdfile.write(f"{line}\n\n")
+                    else:
+                        mdfile.write("\n")
+            
+            # 图片
+            if tweet['images']:
+                mdfile.write(f"**图片** ({len(tweet['images'])} 张):\n\n")
+                for img_idx, img_url in enumerate(tweet['images'], 1):
+                    # 本地图片路径
+                    local_img = f"{images_dir}/tweet_{idx}_img_{img_idx}.jpg"
+                    if os.path.exists(local_img):
+                        mdfile.write(f"![图片 {img_idx}]({local_img})\n\n")
+                    elif os.path.exists(local_img.replace('.jpg', '.png')):
+                        local_img = local_img.replace('.jpg', '.png')
+                        mdfile.write(f"![图片 {img_idx}]({local_img})\n\n")
+                    elif os.path.exists(local_img.replace('.jpg', '.gif')):
+                        local_img = local_img.replace('.jpg', '.gif')
+                        mdfile.write(f"![图片 {img_idx}]({local_img})\n\n")
+                    
+                    # 同时保留原始URL链接
+                    mdfile.write(f"*原图链接*: [{img_url}]({img_url})\n\n")
+            
+            mdfile.write("---\n\n")
+    
+    print(f"✓ 成功生成Markdown文档 {md_filename}")
+    print(f"\n📊 数据摘要:")
+    print(f"  - CSV文件: {csv_filename}")
+    print(f"  - Markdown文档: {md_filename}")
+    print(f"  - 图片目录: {images_dir}/")
+    print(f"  - 推文总数: {len(all_tweets_data)}")
+    
+    # 统计图片总数
+    total_images = sum(tweet['image_count'] for tweet in all_tweets_data)
+    print(f"  - 图片总数: {total_images}")
+    
 else:
-    print("\n未抓取到任何推文数据,未生成CSV文件。")
+    print("\n未抓取到任何推文数据,未生成文件。")
