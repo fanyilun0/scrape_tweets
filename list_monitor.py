@@ -450,8 +450,14 @@ async def monitor_list_once(driver, list_url, pushed_ids):
     print(f"时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"{'='*60}")
     
-    # 抓取列表中的推文
-    tweets = scrape_list_tweets(driver, list_url, MAX_TWEETS_PER_CHECK)
+    # 抓取列表中的推文（增强异常处理）
+    tweets = []
+    try:
+        tweets = scrape_list_tweets(driver, list_url, MAX_TWEETS_PER_CHECK)
+    except Exception as e:
+        print(f"  × 抓取列表 {list_url} 时发生严重错误: {e}")
+        # 返回0，让主循环继续
+        return 0
     
     if not tweets:
         print("未获取到推文")
@@ -543,12 +549,19 @@ async def monitor_lists_loop():
         print("\n提示: 按 Ctrl+C 停止监听\n")
         
         loop_count = 0
+        # 增加一个登录检查的计数器
+        login_check_interval_loops = 10  # 每10次循环检查一次登录
         
         while True:
             loop_count += 1
             print(f"\n{'#'*60}")
             print(f"第 {loop_count} 次检查")
             print(f"{'#'*60}")
+            
+            # 定期检查登录状态
+            if loop_count % login_check_interval_loops == 0:
+                print("\n[INFO] 定期检查登录状态...")
+                check_login_status(driver)
             
             total_new_tweets = 0
             

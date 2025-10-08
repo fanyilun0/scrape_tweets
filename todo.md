@@ -190,3 +190,108 @@ driver = uc.Chrome(options=options)
 
 
 
+新增List monitor内容
+1. 基于 main.py 爬取推特内容的模板来拓展使用推特列表的内容的监听逻辑
+- 基于给定的list，来定时获取列表中的推文，并把监听到的 作者/时间/推文/图片等构建完整的消息后 推送到webhook
+
+建议调整1：增加定期的登录状态检查
+
+原因：长时间挂机后，推特的登录Cookie可能会失效，导致抓取失败。您目前的脚本只在启动时检查一次登录。
+
+实现方案：可以在主循环 while True: 中增加一个计数器，比如每循环10次或每隔1小时，就重新调用一次 check_login_status(driver) 来确保登录状态依然有效。
+
+需要调整的代码部分 (monitor_lists_loop 函数内):
+
+Python
+async def monitor_lists_loop():
+    # ... 省略前面的代码 ...
+    try:
+        driver = create_undetected_driver()
+
+        if not check_login_status(driver):
+            print("× 登录检查失败，退出程序")
+            return
+
+        # ... 省略中间的代码 ...
+
+        loop_count = 0
+        # 增加一个登录检查的计数器
+        login_check_interval_loops = 10 # 每10次循环检查一次登录
+
+        while True:
+            loop_count += 1
+            print(f"\n{'#'*60}")
+            print(f"第 {loop_count} 次检查")
+            print(f"{'#'*60}")
+
+            # 新增的逻辑：定期检查登录状态
+            if loop_count % login_check_interval_loops == 0:
+                print("\n[INFO] 定期检查登录状态...")
+                check_login_status(driver)
+
+            total_new_tweets = 0
+
+            # ... 省略后面的循环和推送逻辑 ...
+建议调整2：在每次检查前刷新页面
+
+原因：长时间停留在同一个页面可能会导致页面元素状态异常或内存占用增加。在每次抓取前刷新一下页面，可以获得一个更“干净”的页面状态。
+
+实现方案：在 monitor_list_once 函数开始抓取数据之前，先执行一次页面刷新。
+
+需要调整的代码部分 (monitor_list_once 函数内):
+
+Python
+async def monitor_list_once(driver, list_url, pushed_ids):
+    # ... 省略前面的代码 ...
+    print(f"开始监听列表: {list_url}")
+
+    # 在这里增加页面刷新
+    try:
+        print("  正在刷新页面以获取最新状态...")
+        driver.get(list_url) # 直接重新访问URL是比refresh更可靠的方式
+        time.sleep(5) # 等待页面加载
+    except Exception as e:
+        print(f"  × 刷新页面失败: {e}")
+        # 如果刷新失败，可以选择跳过本次抓取
+        return 0
+
+    print(f"时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"{'='*60}")
+
+    # 抓取列表中的推文
+    tweets = scrape_list_tweets(driver, list_url, MAX_TWEETS_PER_CHECK)
+
+    # ... 省略后面的代码 ...
+注意: scrape_list_tweets 函数里本身已经有了 driver.get(list_url)，所以如果您想简化，确保这个 get 操作每次都能被调用即可。从您现有的代码看，它每次都会被调用，所以这个调整是可选的，但明确知道其作用是好的。
+
+建议调整3：增强抓取过程中的异常处理
+
+原因：在抓取 scrape_list_tweets 的过程中，可能因为网络波动或页面临时变化导致函数抛出异常，这可能会中断整个 while 循环，导致程序退出。
+
+实现方案：在 monitor_list_once 函数中为 scrape_list_tweets 的调用增加一个 try...except 块，这样即使单个列表抓取出错，程序也能继续监听其他列表，并在下一轮继续尝试。
+
+需要调整的代码部分 (monitor_list_once 函数内):
+
+Python
+async def monitor_list_once(driver, list_url, pushed_ids):
+    # ... 省略前面的代码 ...
+
+    # 为抓取操作增加更细致的错误捕获
+    tweets = []
+    try:
+        tweets = scrape_list_tweets(driver, list_url, MAX_TWEETS_PER_CHECK)
+    except Exception as e:
+        print(f"  × 抓取列表 {list_url} 时发生严重错误: {e}")
+        # 返回0，让主循环继续
+        return 0
+
+    if not tweets:
+        print("未获取到推文")
+        return 0
+
+    # ... 省略后面的代码 ...
+总结
+
+您的脚本在核心功能上已经做得非常好了，完全满足您的需求。您不需要对现有逻辑进行大的修改。
+
+上面提出的三点调整，是从长期稳定运行的角度出发的“加固”措施，建议您可以根据自己的需要选择性地添加进去，它们能有效提升脚本在无人值守情况下的可靠性。
