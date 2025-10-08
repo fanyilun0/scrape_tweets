@@ -1,201 +1,206 @@
-# Twitter/X 推文抓取工具
+# 推特列表高级监听机器人 (Advanced Twitter List Monitor)
 
-这是一个用于批量抓取 Twitter(X) 推文内容的 Python 脚本，支持自动提取推文文本、发布时间、高清图片等信息，并生成 CSV 和 Markdown 格式的输出文件。
+这是一个功能强大的 Python 脚本，用于实时监控一个或多个指定的 Twitter/X 列表。当列表中出现新推文时，它能智能识别推文类型（原创、转推、回复、引用），并提取丰富的信息，通过 Webhook 将格式化后的消息推送到你选择的通知服务（如 Discord、Telegram、飞书等）。
 
-## ✨ 最新更新（v2.0）
+[![Python 3.12+](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**全面优化反爬虫策略，解决登录限制问题！**
+## ✨ 功能特性
 
-- 🚀 **使用 undetected_chromedriver** - 自动移除浏览器自动化检测特征
-- 🔐 **持久化登录状态** - 首次手动登录，之后自动保持登录
-- 🌐 **代理服务器支持** - 默认支持本地代理（http://127.0.0.1:7890）
-- 🎭 **人类行为模拟** - 随机延时、自动滚动、意外操作
-- 📊 **断点续传** - 自动记录已抓取推文，支持中断后继续
-- ⚡ **智能登录检测** - 自动判断是否需要登录
+- **多列表监控**: 支持同时监控任意数量的公开 Twitter 列表。
+- **实时 Webhook 推送**: 快速将新推文和运行错误推送到指定服务。
+- **精准的推文类型识别**:
+    - 🐦 **原创推文**: 捕获作者、内容、图片和时间。
+    - 🔄 **转推 (Retweet)**: 清晰展示**转推者**和**原作者**，还原信息传播路径。
+    - 💬 **回复 (Reply)**: 识别回复行为，并提取**被回复的用户**列表。
+    - 📖 **引用 (Quote)**: **同时捕获**新的评论和被引用的**完整原文**，提供完整的对话上下文。
+- **强大的用户白名单**: 可选的用户白名单功能，只推送你关心的特定用户的动态（包括他们的原创、转推、回复和引用）。
+- **持久化登录**: 利用浏览器 Profile 实现持久化登录，一次登录后无需再次扫码或输入密码。
+- **反检测优化**: 基于 `undetected-chromedriver`，有效降低被 Twitter/X 检测为自动化工具的风险。
+- **丰富的信息提取**: 全面解析推文，包括作者、转推者、正文、图片、时间、推文链接以及被引用推文的全部信息。
+- **健壮的日志与错误处理**:
+    - 在终端输出彩色日志，直观了解运行状态。
+    - 将所有日志记录到 `monitor.log` 文件中，方便排查问题。
+    - 运行中发生严重错误时，会自动将错误详情推送到 Webhook。
 
-详细更新说明：[OPTIMIZATION_SUMMARY.md](./OPTIMIZATION_SUMMARY.md)
+## ⚙️ 环境要求
 
-## 功能特性
-
-- ✅ 批量抓取推文内容
-- ✅ 提取推文发布时间和用户信息
-- ✅ 自动下载推文中的高清图片（原图质量）
-- ✅ 生成 CSV 文件（适合数据分析）
-- ✅ 生成 Markdown 文档（带图片预览，适合阅读）
-- ✅ 反检测技术（undetected_chromedriver）
-- ✅ 行为随机化，极大降低被封锁风险
-- ✅ 持久化登录，避免重复登录触发风险
-- ✅ 断点续传，支持中断后继续抓取
+- Python 3.12 或更高版本
+- Google Chrome 浏览器
+- `pip` 或 `uv` 包管理工具
 
 ## 🚀 快速开始
 
-### 1. 安装依赖
+### 1. 下载项目文件
+
+将项目文件下载或克隆到你的本地文件夹。
 
 ```bash
+git clone <your-repo-url>
+cd <your-repo-folder>
+```
+
+### 2. 创建并配置环境
+
+强烈建议使用 Python 虚拟环境。
+
+```bash
+# 创建虚拟环境
+python3 -m venv venv
+
+# 激活虚拟环境 (macOS/Linux)
+source venv/bin/activate
+# (Windows)
+# venv\Scripts\activate
+```
+
+### 3. 安装依赖
+
+项目依赖以下 Python 库：
+- `undetected-chromedriver`: 核心驱动库
+- `selenium`: 浏览器自动化框架
+- `requests`: 用于下载图片和发送 Webhook
+
+创建一个名为 `requirements.txt` 的文件，内容如下：
+```txt
+undetected-chromedriver
+selenium
+requests
+```
+
+然后运行以下命令安装：
+```bash
+# 使用 pip
 pip install -r requirements.txt
+
+# 或者，如果你使用 uv
+uv pip install -r requirements.txt
 ```
 
-主要依赖：
-- `undetected-chromedriver` - 反检测浏览器驱动
-- `selenium` - Web自动化框架
-- `requests` - HTTP请求库
+### 4. 配置文件 (`config.py`)
 
-### 2. 配置代理（可选）
-
-编辑 `main.py` 顶部配置：
+**这是最关键的一步。** 请在项目根目录下创建一个名为 `config.py` 的文件，并根据你的需求填入以下内容：
 
 ```python
-# 使用代理（默认）
-PROXY = "http://127.0.0.1:7890"
+# ==================== 浏览器配置 ====================
+# 代理设置 (如果你的网络环境需要)
+# 不需要代理则设置为 None
+CHROME_PROXY = "http://127.0.0.1:7890"
 
-# 不使用代理
-PROXY = None
+# 是否使用持久化 Profile (强烈建议开启)
+# 开启后，第一次登录信息会保存在 PROFILE_DIR 文件夹中，后续无需再次登录
+USE_PERSISTENT_PROFILE = True
+PROFILE_DIR = "./chrome_profile"  # Profile 保存路径
+
+# ==================== 监控配置 ====================
+# 你要监控的 Twitter 列表 URL (可以添加多个)
+TWITTER_LISTS = [
+    "https://x.com/i/lists/1234567890",
+    "https://x.com/i/lists/0987654321"
+]
+
+# 检查列表的间隔时间 (秒)
+LIST_CHECK_INTERVAL = 240
+
+# 每次检查时，最多从列表顶部获取的推文数量
+# 建议设为 20-30，以防错过快速刷屏的推文
+MAX_TWEETS_PER_CHECK = 20
+
+# ==================== 用户过滤配置 ====================
+# 是否启用用户白名单过滤
+# True: 只推送 MONITORED_USERS 中用户的推文/转推/回复/引用
+# False: 推送列表中的所有新推文
+ENABLE_USER_FILTER = True
+
+# 用户白名单 (Twitter Handle，不带@)
+# 仅在 ENABLE_USER_FILTER = True 时生效
+MONITORED_USERS = [
+    "elonmusk",
+    "VitalikButerin"
+]
+
+# ==================== 文件路径配置 ====================
+# 用于记录已推送推文ID的文件，防止重复推送
+PUSHED_IDS_FILE = "./pushed_ids.json"
 ```
 
-### 3. 运行脚本
+### 5. Webhook 配置 (`webhook.py`)
 
-```bash
-python main.py
-```
-
-### 4. 首次登录（仅首次需要）
-
-- 脚本自动打开 Chrome 浏览器
-- 如检测到未登录，按提示手动登录
-- 登录成功后按 Enter 键继续
-- **登录信息会自动保存，下次无需重复登录！**
-
-### 5. 查看结果
-
-生成的文件：
-- 📄 `tweets_data_*.csv` - 结构化数据
-- 📝 `tweets_data_*.md` - Markdown文档
-- 🖼️ `tweets_images_*/` - 图片目录
-- 📊 `scraped_tweet_ids.json` - 抓取记录
-
-更详细的使用说明：**[QUICK_START.md](./QUICK_START.md)** ⭐
-
-## 输出文件
-
-运行完成后会生成以下文件：
-
-### 1. CSV 文件 (`tweets_data_YYYYMMDD_HHMMSS.csv`)
-包含字段：
-- 序号
-- 用户名
-- 发布时间
-- 推文链接
-- 推文内容
-- 图片数量
-- 图片URL
-
-### 2. Markdown 文档 (`tweets_data_YYYYMMDD_HHMMSS.md`)
-包含：
-- 每条推文的完整内容
-- 发布时间和链接
-- 嵌入的本地图片（可预览）
-- 原图 URL 链接
-
-### 3. 图片目录 (`tweets_images_YYYYMMDD_HHMMSS/`)
-存储所有下载的推文图片，命名格式：
-- `tweet_1_img_1.jpg`
-- `tweet_1_img_2.jpg`
-- `tweet_2_img_1.jpg`
-- ...
-
-## 📚 文档导航
-
-- **[QUICK_START.md](./QUICK_START.md)** - 5分钟快速上手指南 ⭐ 推荐新手阅读
-- **[OPTIMIZATION_SUMMARY.md](./OPTIMIZATION_SUMMARY.md)** - 反爬虫优化总结
-- **[CONFIG.md](./CONFIG.md)** - 详细配置说明
-- **[USAGE_GUIDE.md](./USAGE_GUIDE.md)** - 完整使用指南
-- **[todo.md](./todo.md)** - 原始需求和技术分析
-
-## ⚙️ 配置说明
-
-### 自定义推文链接
-
-修改 `main.py` 中的 `original_text` 变量，替换为你需要抓取的推文链接。
-
-### 代理配置
+你需要根据你使用的通知服务（如 Discord、Telegram、飞书等）来实现具体的推送逻辑。在项目根目录下创建一个 `webhook.py` 文件，并参考以下模板进行修改：
 
 ```python
-# 默认使用本地代理
-PROXY = "http://127.0.0.1:7890"
+# 以 Discord 为例
+import requests
+import asyncio
 
-# 使用其他代理
-PROXY = "http://your_proxy:port"
+# 你的企业微信 Webhook URL
+WEBHOOK_URL = ""
 
-# 不使用代理
-PROXY = None
+async def send_message_async(message, msg_type="text"):
+    """异步发送文本消息"""
+    payload = {
+        "content": message
+    }
+    try:
+        loop = asyncio.get_event_loop()
+        # 在异步函数中使用 run_in_executor 来运行同步的网络请求
+        await loop.run_in_executor(
+            None, 
+            lambda: requests.post(WEBHOOK_URL, json=payload, timeout=10)
+        )
+        return True
+    except Exception as e:
+        print(f"发送 Webhook 消息失败: {e}")
+        return False
+
+async def send_image_async(image_base64):
+    """异步发送图片消息 (Base64 格式)"""
+    # 此处仅为功能占位，请根据你的服务自行实现。
+    return True
 ```
 
-### 延时配置
+## ▶️ 运行脚本
 
-在 `random_sleep()` 调用处调整：
+1.  确保你的虚拟环境已激活，并且所有配置都已完成。
+2.  在终端中运行主脚本：
 
-```python
-# 默认 3-7 秒随机延时
-random_sleep(3, 7)
+    ```bash
+    python list_monitor.py
+    # 或者
+    uv run list_monitor.py
+    ```
+3.  **首次运行**: 脚本会自动打开一个 Chrome 浏览器。如果检测到你未登录 Twitter/X，它会在终端提示你手动登录。请在弹出的浏览器窗口中完成登录操作，然后回到终端按 `Enter` 键继续。你的登录状态会被保存到 `chrome_profile` 文件夹中，后续运行无需再次登录。
+4.  脚本启动成功后，将开始按设定的间隔周期性检查列表。
+5.  要停止脚本，请在终端中按 `Ctrl + C`。
 
-# 更保守（5-10秒）
-random_sleep(5, 10)
-```
-
-详细配置请参考：[CONFIG.md](./CONFIG.md)
-
-## 🛡️ 反爬虫策略
-
-本工具采用多层反检测技术：
-
-| 策略 | 实施方式 | 效果 |
-|------|---------|------|
-| **浏览器指纹消除** | undetected_chromedriver | ⭐⭐⭐⭐⭐ |
-| **持久化登录** | Chrome Profile | ⭐⭐⭐⭐⭐ |
-| **行为随机化** | 随机延时+滚动 | ⭐⭐⭐⭐ |
-| **意外操作** | 5%概率随机动作 | ⭐⭐⭐ |
-| **代理支持** | 可配置代理服务器 | ⭐⭐⭐⭐⭐ |
-
-## ❓ 常见问题
-
-### Q: 遇到"Could not log you in now"错误？
-**A:** 这正是本次优化要解决的问题！现在使用了 `undetected_chromedriver` 和持久化登录，极大降低了此错误的发生率。
-
-### Q: 代理连接失败？
-**A:** 检查代理是否运行，或设置 `PROXY = None` 不使用代理。
-
-### Q: 如何切换账号？
-**A:** 删除 `chrome_profile` 目录，重新运行脚本。
-
-### Q: 抓取速度能否更快？
-**A:** 可以调整延时参数，但不建议过快，会增加被检测风险。
-
-更多问题解答：[QUICK_START.md](./QUICK_START.md)
-
-## ⚠️ 注意事项
-
-1. **首次运行**：需要手动登录，之后自动保持登录状态
-2. **代理配置**：默认使用 `http://127.0.0.1:7890`，请确保代理运行或禁用
-3. **抓取频率**：默认 3-7 秒随机延时，不建议调整过快
-4. **合法使用**：请遵守 Twitter/X 服务条款，仅用于个人学习研究
-
-## 📋 系统要求
-
-- Python 3.7+
-- Chrome 浏览器（最新版）
-- 稳定的网络连接
-- （可选）代理服务器
-
-## 📦 依赖项
+## 📁 文件结构
 
 ```
-selenium>=4.0.0
-undetected-chromedriver>=3.5.0
-requests>=2.28.0
+.
+├── list_monitor.py     # 主脚本
+├── config.py           # 配置文件 (需自行创建) ❗️
+├── webhook.py          # Webhook推送实现 (需自行创建) ❗️
+├── requirements.txt    # 依赖库清单
+├── monitor.log         # 运行日志（自动生成）
+└── pushed_ids.json     # 已推送推文ID记录（自动生成）
 ```
 
-## 许可证
+## ⚠️ 故障排查
 
-MIT License
+- **脚本启动时 Chrome 崩溃**:
+  - **原因**: `undetected-chromedriver` 与你的 Chrome 浏览器版本不兼容。这通常发生在 Chrome 自动更新后。
+  - **解决方案**:
+    1.  运行 `pip install --upgrade undetected-chromedriver` 更新库。
+    2.  如果问题依旧，在 `list_monitor.py` 的 `create_undetected_driver` 函数中明确指定 Chrome 版本号，例如 `driver = uc.Chrome(version_main=141, options=options)`（请将 `141` 替换为你的 Chrome 主版本号）。
 
+- **无法加载已推送 ID / JSON 错误**:
+  - **原因**: `pushed_ids.json` 文件可能为空或内容损坏。
+  - **解决方案**: 删除 `pushed_ids.json` 文件，脚本下次运行时会自动重新创建。
 
+- **无法提取推文 / 频繁报错**:
+  - **原因**: Twitter/X 更新了前端页面结构，导致脚本中的 XPath 选择器失效。
+  - **解决方案**: 这是 Web 爬虫的常见问题。需要分析新的 HTML 结构，并更新 `extract_tweet_data` 函数中的 XPath 表达式。
+
+## 📜 许可
+
+本项目采用 [MIT License](https://opensource.org/licenses/MIT) 授权。
