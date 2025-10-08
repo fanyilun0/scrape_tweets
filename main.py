@@ -3,14 +3,15 @@ import time
 import csv
 import os
 import requests
+import random
+import json
 from datetime import datetime
-from selenium import webdriver
+import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service as ChromeService
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.webdriver.common.action_chains import ActionChains
 
 # 你提供的包含推文链接的原始文本
 original_text = """
@@ -88,61 +89,117 @@ https://x.com/0xSunNFT/status/1951099879906058707
 https://x.com/0xSunNFT/status/1962792706905915473
 """
 
+# ==================== 配置区域 ====================
+# 代理配置（如果不需要代理，设置为None）
+PROXY = "http://127.0.0.1:7890"  # 默认代理地址，可以设置为None禁用
+
+# 是否使用持久化Profile（第一次运行需要手动登录，之后会保存登录状态）
+USE_PERSISTENT_PROFILE = True
+PROFILE_DIR = "./chrome_profile"
+
+# 已抓取推文ID记录文件（避免重复抓取）
+SCRAPED_IDS_FILE = "scraped_tweet_ids.json"
+
+# ==================== 辅助函数 ====================
+def load_scraped_ids():
+    """加载已抓取的推文ID"""
+    if os.path.exists(SCRAPED_IDS_FILE):
+        try:
+            with open(SCRAPED_IDS_FILE, 'r', encoding='utf-8') as f:
+                return set(json.load(f))
+        except:
+            return set()
+    return set()
+
+def save_scraped_id(tweet_id):
+    """保存已抓取的推文ID"""
+    scraped_ids = load_scraped_ids()
+    scraped_ids.add(tweet_id)
+    with open(SCRAPED_IDS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(list(scraped_ids), f, indent=2)
+
+def random_sleep(min_sec=3, max_sec=7):
+    """随机延时，模拟人类行为"""
+    sleep_time = random.uniform(min_sec, max_sec)
+    print(f"  随机等待 {sleep_time:.2f} 秒...")
+    time.sleep(sleep_time)
+
+def simulate_human_scroll(driver):
+    """模拟人类滚动行为"""
+    print("  模拟页面滚动...")
+    scroll_times = random.randint(1, 3)
+    for _ in range(scroll_times):
+        scroll_amount = random.randint(200, 500)
+        driver.execute_script(f"window.scrollBy(0, {scroll_amount});")
+        time.sleep(random.uniform(0.5, 1.5))
+
+def create_undetected_driver():
+    """创建反检测的Chrome浏览器实例"""
+    print("正在启动 undetected_chromedriver...")
+    
+    options = uc.ChromeOptions()
+    
+    # 添加代理配置
+    if PROXY:
+        print(f"  配置代理: {PROXY}")
+        options.add_argument(f'--proxy-server={PROXY}')
+    
+    # 使用持久化Profile
+    if USE_PERSISTENT_PROFILE:
+        print(f"  使用持久化Profile: {PROFILE_DIR}")
+        options.add_argument(f'--user-data-dir={PROFILE_DIR}')
+    
+    # 其他优化选项
+    options.add_argument('--disable-blink-features=AutomationControlled')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    
+    try:
+        driver = uc.Chrome(options=options)
+        print("✓ undetected_chromedriver 启动成功")
+        return driver
+    except Exception as e:
+        print(f"× 启动失败: {e}")
+        print("\n请尝试以下解决方案:")
+        print("1. 安装undetected-chromedriver: pip install undetected-chromedriver")
+        print("2. 确保Chrome浏览器已安装")
+        print("3. 如果使用代理，请确保代理服务正常运行")
+        raise
+
+# ==================== 主程序 ====================
+
 # 1. 从文本中提取所有推文URL
 tweet_urls = re.findall(r'https://x\.com/\w+/status/\d+', original_text)
 print(f"检测到 {len(tweet_urls)} 条推文链接。")
 
+# 加载已抓取的推文ID
+scraped_ids = load_scraped_ids()
+print(f"已抓取的推文数: {len(scraped_ids)}")
+
 # 2. 初始化Selenium WebDriver
-print("正在启动浏览器...")
+print("\n正在启动浏览器...")
+driver = create_undetected_driver()
 
-# 尝试多种方式启动浏览器，避免SSL错误
-driver = None
 try:
-    # 方法1: 尝试使用webdriver-manager（可能遇到SSL问题）
-    print("尝试方法1: 使用webdriver-manager自动下载ChromeDriver...")
-    service = ChromeService(executable_path=ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service)
-    print("✓ 方法1成功")
-except Exception as e:
-    print(f"× 方法1失败: {e}")
+    # 3. 检查登录状态
+    driver.get("https://x.com/home")
+    time.sleep(3)
     
-    try:
-        # 方法2: 直接使用系统中已安装的ChromeDriver
-        print("\n尝试方法2: 使用系统已安装的ChromeDriver...")
-        driver = webdriver.Chrome()
-        print("✓ 方法2成功")
-    except Exception as e2:
-        print(f"× 方法2失败: {e2}")
-        
-        try:
-            # 方法3: 使用Chrome的无头模式选项
-            print("\n尝试方法3: 使用Chrome选项启动...")
-            chrome_options = webdriver.ChromeOptions()
-            chrome_options.add_argument('--no-sandbox')
-            chrome_options.add_argument('--disable-dev-shm-usage')
-            driver = webdriver.Chrome(options=chrome_options)
-            print("✓ 方法3成功")
-        except Exception as e3:
-            print(f"× 方法3失败: {e3}")
-            print("\n所有方法都失败了。请尝试以下解决方案:")
-            print("1. 手动下载ChromeDriver: https://chromedriver.chromium.org/downloads")
-            print("2. 或使用brew安装: brew install chromedriver")
-            print("3. 或检查网络连接和SSL证书")
-            raise RuntimeError("无法启动Chrome浏览器")
+    # 检查是否需要登录
+    current_url = driver.current_url
+    if "login" in current_url or "i/flow/login" in current_url:
+        print("\n" + "="*50)
+        print("检测到未登录状态")
+        print("浏览器已打开登录页面，请在浏览器窗口中手动登录你的X账号。")
+        print("登录成功后，回到这里，按Enter键继续执行抓取...")
+        print("注意：登录信息将保存到本地，下次运行时无需重复登录")
+        print("="*50)
+        input() # 等待用户按Enter键
+    else:
+        print("\n✓ 检测到已登录状态，无需重复登录")
+        print("提示：如需切换账号，请删除 chrome_profile 目录后重新运行")
 
-if driver is None:
-    raise RuntimeError("无法启动Chrome浏览器")
-
-try:
-    # 3. 手动登录
-    driver.get("https://x.com/login")
-    print("\n" + "="*50)
-    print("浏览器已打开，请在浏览器窗口中手动登录你的X账号。")
-    print("登录成功后，回到这里，按Enter键继续执行抓取...")
-    print("="*50)
-    input() # 等待用户按Enter键
-
-    print("\n登录确认，开始抓取推文内容...\n")
+    print("\n开始抓取推文内容...\n")
     
     all_tweets_data = []
 
@@ -153,6 +210,14 @@ try:
     
     # 5. 循环访问每个URL并抓取内容
     for i, url in enumerate(tweet_urls):
+        # 提取推文ID
+        tweet_id = url.split('/')[-1]
+        
+        # 检查是否已抓取
+        if tweet_id in scraped_ids:
+            print(f"--- 跳过第 {i+1}/{len(tweet_urls)} 条（已抓取）: {url} ---")
+            continue
+            
         print(f"--- 正在抓取第 {i+1}/{len(tweet_urls)} 条: {url} ---")
         try:
             driver.get(url)
@@ -162,6 +227,9 @@ try:
             tweet_article = wait.until(
                 EC.presence_of_element_located((By.XPATH, "//article[@data-testid='tweet']"))
             )
+            
+            # 模拟人类滚动行为
+            simulate_human_scroll(driver)
             
             # 提取推文正文
             try:
@@ -275,12 +343,37 @@ try:
                 "images": image_urls,
                 "image_count": len(image_urls)
             })
+            
+            # 保存已抓取的推文ID
+            save_scraped_id(tweet_id)
+            
+            # 随机执行一些"意外"操作（5%概率）
+            if random.random() < 0.05:
+                action = random.choice(['refresh', 'scroll_top', 'mouse_move'])
+                if action == 'refresh':
+                    print("  [模拟行为] 刷新页面...")
+                    driver.refresh()
+                    time.sleep(random.uniform(2, 4))
+                elif action == 'scroll_top':
+                    print("  [模拟行为] 滚动到页面顶部...")
+                    driver.execute_script("window.scrollTo(0, 0);")
+                    time.sleep(random.uniform(1, 2))
+                elif action == 'mouse_move':
+                    print("  [模拟行为] 随机移动鼠标...")
+                    try:
+                        actions = ActionChains(driver)
+                        actions.move_by_offset(random.randint(50, 200), random.randint(50, 200))
+                        actions.perform()
+                    except:
+                        pass
 
-            # 增加一个小的随机延时，模仿人类行为，降低被封锁的风险
-            time.sleep(2)
+            # 随机延时，模仿人类行为，降低被封锁的风险
+            random_sleep(3, 7)
 
         except Exception as e:
             print(f"抓取失败: {url}\n错误信息: {e}\n")
+            # 即使失败也随机等待一下
+            time.sleep(random.uniform(2, 4))
             continue
 
 finally:

@@ -2,54 +2,78 @@
 
 这是一个用于批量抓取 Twitter(X) 推文内容的 Python 脚本，支持自动提取推文文本、发布时间、高清图片等信息，并生成 CSV 和 Markdown 格式的输出文件。
 
+## ✨ 最新更新（v2.0）
+
+**全面优化反爬虫策略，解决登录限制问题！**
+
+- 🚀 **使用 undetected_chromedriver** - 自动移除浏览器自动化检测特征
+- 🔐 **持久化登录状态** - 首次手动登录，之后自动保持登录
+- 🌐 **代理服务器支持** - 默认支持本地代理（http://127.0.0.1:7890）
+- 🎭 **人类行为模拟** - 随机延时、自动滚动、意外操作
+- 📊 **断点续传** - 自动记录已抓取推文，支持中断后继续
+- ⚡ **智能登录检测** - 自动判断是否需要登录
+
+详细更新说明：[OPTIMIZATION_SUMMARY.md](./OPTIMIZATION_SUMMARY.md)
+
 ## 功能特性
 
 - ✅ 批量抓取推文内容
-- ✅ 提取推文发布时间
-- ✅ 自动下载推文中的高清图片（点击大图后获取原图）
+- ✅ 提取推文发布时间和用户信息
+- ✅ 自动下载推文中的高清图片（原图质量）
 - ✅ 生成 CSV 文件（适合数据分析）
 - ✅ 生成 Markdown 文档（带图片预览，适合阅读）
-- ✅ 多种浏览器启动方式（避免 SSL 错误）
-- ✅ 模拟人类行为，降低被封锁风险
+- ✅ 反检测技术（undetected_chromedriver）
+- ✅ 行为随机化，极大降低被封锁风险
+- ✅ 持久化登录，避免重复登录触发风险
+- ✅ 断点续传，支持中断后继续抓取
 
-## 安装依赖
+## 🚀 快速开始
 
-### 方法 1: 使用 pip
+### 1. 安装依赖
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### 方法 2: 使用 uv（推荐）
-```bash
-uv pip install -r requirements.txt
+主要依赖：
+- `undetected-chromedriver` - 反检测浏览器驱动
+- `selenium` - Web自动化框架
+- `requests` - HTTP请求库
+
+### 2. 配置代理（可选）
+
+编辑 `main.py` 顶部配置：
+
+```python
+# 使用代理（默认）
+PROXY = "http://127.0.0.1:7890"
+
+# 不使用代理
+PROXY = None
 ```
 
-### 安装 ChromeDriver
+### 3. 运行脚本
+
 ```bash
-brew install chromedriver
+python main.py
 ```
 
-## 使用方法
+### 4. 首次登录（仅首次需要）
 
-1. **激活虚拟环境**（如果使用）：
-   ```bash
-   source .venv/bin/activate
-   ```
+- 脚本自动打开 Chrome 浏览器
+- 如检测到未登录，按提示手动登录
+- 登录成功后按 Enter 键继续
+- **登录信息会自动保存，下次无需重复登录！**
 
-2. **运行脚本**：
-   ```bash
-   python main.py
-   ```
+### 5. 查看结果
 
-3. **手动登录**：
-   - 脚本会自动打开 Chrome 浏览器并导航到 X(Twitter) 登录页
-   - 在浏览器中手动登录你的 X 账号
-   - 登录成功后，回到终端窗口，按 **Enter** 键继续
+生成的文件：
+- 📄 `tweets_data_*.csv` - 结构化数据
+- 📝 `tweets_data_*.md` - Markdown文档
+- 🖼️ `tweets_images_*/` - 图片目录
+- 📊 `scraped_tweet_ids.json` - 抓取记录
 
-4. **等待抓取完成**：
-   - 脚本会自动访问所有推文链接
-   - 抓取内容、时间和图片
-   - 显示进度信息
+更详细的使用说明：**[QUICK_START.md](./QUICK_START.md)** ⭐
 
 ## 输出文件
 
@@ -79,46 +103,96 @@ brew install chromedriver
 - `tweet_2_img_1.jpg`
 - ...
 
-## 配置说明
+## 📚 文档导航
 
-如果需要抓取不同的推文，修改 `main.py` 中的 `original_text` 变量，将其中的推文链接替换为你需要抓取的链接。
+- **[QUICK_START.md](./QUICK_START.md)** - 5分钟快速上手指南 ⭐ 推荐新手阅读
+- **[OPTIMIZATION_SUMMARY.md](./OPTIMIZATION_SUMMARY.md)** - 反爬虫优化总结
+- **[CONFIG.md](./CONFIG.md)** - 详细配置说明
+- **[USAGE_GUIDE.md](./USAGE_GUIDE.md)** - 完整使用指南
+- **[todo.md](./todo.md)** - 原始需求和技术分析
 
-## 注意事项
+## ⚙️ 配置说明
 
-1. **网络连接**：确保网络稳定，能够访问 Twitter/X
-2. **登录状态**：需要有效的 X 账号进行登录
-3. **抓取速度**：脚本内置延时机制，避免过快请求被封锁
-4. **图片下载**：如果图片较多，下载时间可能较长
-5. **浏览器版本**：确保 Chrome 浏览器为最新版本
+### 自定义推文链接
 
-## 故障排除
+修改 `main.py` 中的 `original_text` 变量，替换为你需要抓取的推文链接。
 
-### 无法启动浏览器
-脚本会尝试 3 种不同的方式启动浏览器：
-1. 使用 webdriver-manager 自动下载
-2. 使用系统已安装的 ChromeDriver
-3. 使用特殊选项启动
+### 代理配置
 
-如果都失败，请手动安装 ChromeDriver：
-```bash
-brew install chromedriver
+```python
+# 默认使用本地代理
+PROXY = "http://127.0.0.1:7890"
+
+# 使用其他代理
+PROXY = "http://your_proxy:port"
+
+# 不使用代理
+PROXY = None
 ```
 
-### SSL 错误
-如果遇到 SSL 连接错误，脚本会自动切换到备选方法。
+### 延时配置
 
-### 图片下载失败
-- 检查网络连接
-- 某些图片可能受到访问限制
-- 脚本会跳过失败的图片，继续下载其他内容
+在 `random_sleep()` 调用处调整：
 
-## 依赖项
+```python
+# 默认 3-7 秒随机延时
+random_sleep(3, 7)
+
+# 更保守（5-10秒）
+random_sleep(5, 10)
+```
+
+详细配置请参考：[CONFIG.md](./CONFIG.md)
+
+## 🛡️ 反爬虫策略
+
+本工具采用多层反检测技术：
+
+| 策略 | 实施方式 | 效果 |
+|------|---------|------|
+| **浏览器指纹消除** | undetected_chromedriver | ⭐⭐⭐⭐⭐ |
+| **持久化登录** | Chrome Profile | ⭐⭐⭐⭐⭐ |
+| **行为随机化** | 随机延时+滚动 | ⭐⭐⭐⭐ |
+| **意外操作** | 5%概率随机动作 | ⭐⭐⭐ |
+| **代理支持** | 可配置代理服务器 | ⭐⭐⭐⭐⭐ |
+
+## ❓ 常见问题
+
+### Q: 遇到"Could not log you in now"错误？
+**A:** 这正是本次优化要解决的问题！现在使用了 `undetected_chromedriver` 和持久化登录，极大降低了此错误的发生率。
+
+### Q: 代理连接失败？
+**A:** 检查代理是否运行，或设置 `PROXY = None` 不使用代理。
+
+### Q: 如何切换账号？
+**A:** 删除 `chrome_profile` 目录，重新运行脚本。
+
+### Q: 抓取速度能否更快？
+**A:** 可以调整延时参数，但不建议过快，会增加被检测风险。
+
+更多问题解答：[QUICK_START.md](./QUICK_START.md)
+
+## ⚠️ 注意事项
+
+1. **首次运行**：需要手动登录，之后自动保持登录状态
+2. **代理配置**：默认使用 `http://127.0.0.1:7890`，请确保代理运行或禁用
+3. **抓取频率**：默认 3-7 秒随机延时，不建议调整过快
+4. **合法使用**：请遵守 Twitter/X 服务条款，仅用于个人学习研究
+
+## 📋 系统要求
 
 - Python 3.7+
-- selenium >= 4.0.0
-- webdriver-manager >= 4.0.0
-- requests >= 2.28.0
-- Chrome 浏览器
+- Chrome 浏览器（最新版）
+- 稳定的网络连接
+- （可选）代理服务器
+
+## 📦 依赖项
+
+```
+selenium>=4.0.0
+undetected-chromedriver>=3.5.0
+requests>=2.28.0
+```
 
 ## 许可证
 
