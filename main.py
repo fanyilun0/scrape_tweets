@@ -258,76 +258,60 @@ try:
             except NoSuchElementException:
                 pass
             
-            # 提取图片（点击获取大图）
+
+            # 提取图片（新方法：直接从缩略图URL推导原图）
             image_urls = []
             try:
-                # 查找所有图片元素
-                image_elements = tweet_article.find_elements(By.XPATH, ".//div[@data-testid='tweetPhoto']//img")
+                # 查找所有包含图片的 div 元素
+                photo_divs = tweet_article.find_elements(By.XPATH, ".//div[@data-testid='tweetPhoto']")
                 
-                for img_idx, img_element in enumerate(image_elements):
-                    try:
-                        # 点击图片打开大图查看器
-                        img_element.click()
-                        time.sleep(1.5)  # 等待大图加载
+                # 遍历每个图片元素，提取其 src
+                for photo_div in photo_divs:
+                    # 在每个 div 中找到 img 标签
+                    img_elements = photo_div.find_elements(By.TAG_NAME, "img")
+                    for img_element in img_elements:
+                        img_url = img_element.get_attribute('src')
                         
-                        # 查找大图元素
-                        try:
-                            large_img = WebDriverWait(driver, 5).until(
-                                EC.presence_of_element_located((By.XPATH, "//img[@alt='Image']"))
-                            )
-                            img_url = large_img.get_attribute('src')
+                        if img_url:
+                            # 将URL参数替换为 'name=orig' 来获取最高清的原图
+                            # 使用正则表达式确保替换的准确性
+                            if 'name=' in img_url:
+                                orig_img_url = re.sub(r'name=\w+', 'name=orig', img_url)
+                            else:
+                                # 如果URL中没有 name 参数，可能需要添加 format=...&name=orig
+                                # 但通常直接在末尾添加 ?name=orig 也能奏效
+                                orig_img_url = img_url.split('?')[0] + '?format=jpg&name=orig'
                             
-                            # 如果获取的是原图链接，替换为更高清版本
-                            if img_url and 'name=' in img_url:
-                                img_url = re.sub(r'name=\w+', 'name=orig', img_url)
-                            
-                            if img_url and img_url not in image_urls:
-                                image_urls.append(img_url)
+                            if orig_img_url not in image_urls:
+                                image_urls.append(orig_img_url)
                                 
                                 # 下载图片
                                 try:
-                                    img_response = requests.get(img_url, timeout=10)
+                                    # 从URL中提取文件名和扩展名
+                                    file_name_part = orig_img_url.split('/')[-1].split('?')[0]
+                                    ext_match = re.search(r'format=(\w+)', orig_img_url)
+                                    ext = ext_match.group(1) if ext_match else 'jpg'
+                                    
+                                    img_filename = f"{file_name_part}.{ext}"
+                                    img_path = os.path.join(images_dir, img_filename)
+
+                                    # 使用带有 User-Agent 的 requests session 来下载
+                                    session = requests.Session()
+                                    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+                                    img_response = session.get(orig_img_url, headers=headers, timeout=15)
+                                    
                                     if img_response.status_code == 200:
-                                        # 从URL中提取文件扩展名
-                                        ext = 'jpg'
-                                        if '.png' in img_url:
-                                            ext = 'png'
-                                        elif '.gif' in img_url:
-                                            ext = 'gif'
-                                        
-                                        img_filename = f"tweet_{i+1}_img_{img_idx+1}.{ext}"
-                                        img_path = os.path.join(images_dir, img_filename)
-                                        
                                         with open(img_path, 'wb') as f:
                                             f.write(img_response.content)
                                         print(f"  ✓ 已保存图片: {img_filename}")
+                                    else:
+                                        print(f"  × 下载图片失败 (状态码: {img_response.status_code})")
                                 except Exception as download_error:
-                                    print(f"  × 下载图片失败: {download_error}")
-                            
-                            # 关闭大图查看器（按ESC或点击关闭按钮）
-                            try:
-                                close_button = driver.find_element(By.XPATH, "//div[@aria-label='Close' or @data-testid='app-bar-close']")
-                                close_button.click()
-                            except:
-                                driver.back()
-                                driver.forward()
-                            
-                            time.sleep(0.5)
-                            
-                        except TimeoutException:
-                            print(f"  × 未能加载大图")
-                            # 尝试关闭可能打开的弹窗
-                            try:
-                                driver.back()
-                            except:
-                                pass
-                            
-                    except Exception as click_error:
-                        print(f"  × 点击图片失败: {click_error}")
-                        continue
-                        
+                                    print(f"  × 下载图片时发生错误: {download_error}")
+
             except NoSuchElementException:
                 pass  # 该推文没有图片
+
             
             print(f"用户名: {user_handle}")
             print(f"发布时间: {tweet_time}")
@@ -457,6 +441,7 @@ if all_tweets_data:
                     
                     # 同时保留原始URL链接
                     mdfile.write(f"*原图链接*: [{img_url}]({img_url})\n\n")
+                    mdfile.write(f"![image]({img_url})\n\n")
             
             mdfile.write("---\n\n")
     

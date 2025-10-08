@@ -1,6 +1,6 @@
 # 推文合集
 
-**抓取时间**: 2025-10-08 12:26:14
+**抓取时间**: 2025-10-08 12:52:20
 
 **推文总数**: 36 条
 
@@ -19,6 +19,12 @@
 1：前言
 
 建立付费群以来，明显感觉到最近的图狗行情非常好，但是部分群友缺乏mint的基础知识导致错过机会，所以写了这篇thread，给所有朋友们做一个简略指南，内容包括mint警报与监控、如何Mint、如何快速获取合约信息、Gas设置、出货选择等。
+
+**图片** (1 张):
+
+*原图链接*: [https://pbs.twimg.com/media/FQ8fK30UUAAoPYc?format=jpg&name=orig](https://pbs.twimg.com/media/FQ8fK30UUAAoPYc?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/FQ8fK30UUAAoPYc?format=jpg&name=orig)
 
 ---
 
@@ -42,6 +48,24 @@
 
 5、12ETH买入BAYC地，目前持仓2*BAYC地，1*MAYC地，1*Koda
 
+**图片** (4 张):
+
+*原图链接*: [https://pbs.twimg.com/media/FRwzkUWVcAAr3-e?format=jpg&name=orig](https://pbs.twimg.com/media/FRwzkUWVcAAr3-e?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/FRwzkUWVcAAr3-e?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/FRwzwdoVkAUt16Q?format=jpg&name=orig](https://pbs.twimg.com/media/FRwzwdoVkAUt16Q?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/FRwzwdoVkAUt16Q?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/FRw0O1BVIAEX9a8?format=jpg&name=orig](https://pbs.twimg.com/media/FRw0O1BVIAEX9a8?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/FRw0O1BVIAEX9a8?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/FRw0dWEUcAA1F5E?format=jpg&name=orig](https://pbs.twimg.com/media/FRw0dWEUcAA1F5E?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/FRw0dWEUcAA1F5E?format=jpg&name=orig)
+
 ---
 
 ## 3. 推文 - @0xSunNFT
@@ -61,6 +85,12 @@ NFT图狗/公售Bot指南
 Bot不是神兵利器，它并不能保证你赚到钱，而是类似于杠杆的工具，合理使用可以有效扩大你的收益，否则只会让你亏损更快
 
 “There is no silver bullet”
+
+**图片** (1 张):
+
+*原图链接*: [https://pbs.twimg.com/media/FVtFC-baMAAe7Yr?format=jpg&name=orig](https://pbs.twimg.com/media/FVtFC-baMAAe7Yr?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/FVtFC-baMAAe7Yr?format=jpg&name=orig)
 
 ---
 
@@ -85,6 +115,16 @@ How I got 70ETH profit with a single degen play, and achieved win-win between pr
 
  , sold 1258 at 0.047 avg and still hold 742
 
+**图片** (2 张):
+
+*原图链接*: [https://pbs.twimg.com/media/FdG-LPVaUAADhfA?format=jpg&name=orig](https://pbs.twimg.com/media/FdG-LPVaUAADhfA?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/FdG-LPVaUAADhfA?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/FdG-kbgagAA5PzE?format=jpg&name=orig](https://pbs.twimg.com/media/FdG-kbgagAA5PzE?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/FdG-kbgagAA5PzE?format=jpg&name=orig)
+
 ---
 
 ## 5. 推文 - @0xSunNFT
@@ -99,6 +139,24 @@ How I got 70ETH profit with a single degen play, and achieved win-win between pr
 
 
 我在币圈的第一桶金就是在BSC玩土狗币赚的，这次虽然错过了 $PEPE ，但是也靠着 $WOJAK 和 $APED 获得了20E左右的收益，借这个帖子和大家分享一些经验
+
+**图片** (4 张):
+
+*原图链接*: [https://pbs.twimg.com/media/FuE7ZX1acAEoE2Q?format=jpg&name=orig](https://pbs.twimg.com/media/FuE7ZX1acAEoE2Q?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/FuE7ZX1acAEoE2Q?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/FuE789HakAIiOrP?format=jpg&name=orig](https://pbs.twimg.com/media/FuE789HakAIiOrP?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/FuE789HakAIiOrP?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/FuE8CIiacAAkKzr?format=jpg&name=orig](https://pbs.twimg.com/media/FuE8CIiacAAkKzr?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/FuE8CIiacAAkKzr?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/FuE8TtwaMAUQk-y?format=png&name=orig](https://pbs.twimg.com/media/FuE8TtwaMAUQk-y?format=png&name=orig)
+
+![image](https://pbs.twimg.com/media/FuE8TtwaMAUQk-y?format=png&name=orig)
 
 ---
 
@@ -120,6 +178,28 @@ How I got 70ETH profit with a single degen play, and achieved win-win between pr
 
 @okx
 
+**图片** (5 张):
+
+*原图链接*: [https://pbs.twimg.com/media/Fvr7yWRaIAADg2-?format=jpg&name=orig](https://pbs.twimg.com/media/Fvr7yWRaIAADg2-?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/Fvr7yWRaIAADg2-?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/FuE7ZX1acAEoE2Q?format=jpg&name=orig](https://pbs.twimg.com/media/FuE7ZX1acAEoE2Q?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/FuE7ZX1acAEoE2Q?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/FuE789HakAIiOrP?format=jpg&name=orig](https://pbs.twimg.com/media/FuE789HakAIiOrP?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/FuE789HakAIiOrP?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/FuE8CIiacAAkKzr?format=jpg&name=orig](https://pbs.twimg.com/media/FuE8CIiacAAkKzr?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/FuE8CIiacAAkKzr?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/FuE8TtwaMAUQk-y?format=png&name=orig](https://pbs.twimg.com/media/FuE8TtwaMAUQk-y?format=png&name=orig)
+
+![image](https://pbs.twimg.com/media/FuE8TtwaMAUQk-y?format=png&name=orig)
+
 ---
 
 ## 7. 推文 - @0xSunNFT
@@ -135,6 +215,16 @@ Idk what happened but I just aped 1ETH at
 @Pauly0x
 
  's p0nd site then swap out with 44.5ETH life is crazy man
+
+**图片** (2 张):
+
+*原图链接*: [https://pbs.twimg.com/media/F2Ir9sRbQAEnW_K?format=jpg&name=orig](https://pbs.twimg.com/media/F2Ir9sRbQAEnW_K?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/F2Ir9sRbQAEnW_K?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/F2IsMuEbYAAFSav?format=jpg&name=orig](https://pbs.twimg.com/media/F2IsMuEbYAAFSav?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/F2IsMuEbYAAFSav?format=jpg&name=orig)
 
 ---
 
@@ -188,6 +278,24 @@ Idk what happened but I just aped 1ETH at
 
 溪云初起日沉阁，山雨欲来风满楼。
 
+**图片** (4 张):
+
+*原图链接*: [https://pbs.twimg.com/media/F5xO7t5bAAEhBMJ?format=jpg&name=orig](https://pbs.twimg.com/media/F5xO7t5bAAEhBMJ?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/F5xO7t5bAAEhBMJ?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/F5xO8cAbAAAv1Qg?format=jpg&name=orig](https://pbs.twimg.com/media/F5xO8cAbAAAv1Qg?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/F5xO8cAbAAAv1Qg?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/F5xO9OubAAAv9Q_?format=png&name=orig](https://pbs.twimg.com/media/F5xO9OubAAAv9Q_?format=png&name=orig)
+
+![image](https://pbs.twimg.com/media/F5xO9OubAAAv9Q_?format=png&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/F5xO969bAAAbzfY?format=jpg&name=orig](https://pbs.twimg.com/media/F5xO969bAAAbzfY?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/F5xO969bAAAbzfY?format=jpg&name=orig)
+
 ---
 
 ## 9. 推文 - @0xSunNFT
@@ -221,6 +329,20 @@ Digi突袭Freemint，一周后地板2E，二十天后地板10E，两个月后地
 
 
 而在这个项目的参与上，我给自己打60分。值得肯定的点在于我没有因为FUD就忽略或否定节点猴，从头到尾一直在观察竞标情况，并且在拍卖将在符合预期的0.03BTC附近结束时参与了20只，获利3个BTC左右，而不足之处是那几天项目太多，分散了精力，我竟然没有仔细调研背景，一直误以为节点猴是一个热度很高的后起之秀，直到拍卖结束才认识到它早在23年2月份就铭刻完毕，否则不说梭哈，至少也会投入10~15wu去参与，毕竟同时满足大资金、高倍数，还能过一把开盲盒瘾的项目是真的不多。
+
+**图片** (3 张):
+
+*原图链接*: [https://pbs.twimg.com/media/GDDhs8naoAARflp?format=jpg&name=orig](https://pbs.twimg.com/media/GDDhs8naoAARflp?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GDDhs8naoAARflp?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GDDuXaRbIAA8Yy-?format=jpg&name=orig](https://pbs.twimg.com/media/GDDuXaRbIAA8Yy-?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GDDuXaRbIAA8Yy-?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GDDuih0b0AA7-Q0?format=png&name=orig](https://pbs.twimg.com/media/GDDuih0b0AA7-Q0?format=png&name=orig)
+
+![image](https://pbs.twimg.com/media/GDDuih0b0AA7-Q0?format=png&name=orig)
 
 ---
 
@@ -403,6 +525,24 @@ x.com/0xsunnft/statu
 
 很多朋友在私聊和评论区里询问进群相关的事情，我的群每个月都是满的，只有月初会有一些空位，这几个月基本上群友推荐的朋友进来就满了，所以申请表看的进度很慢，希望大家理解，也不要被其他付费渠道骗了，感谢各位。最后也再次感谢市场，能接触币圈是我们这一代人的幸运，一定要把握牛市里的每一次机会。
 
+**图片** (4 张):
+
+*原图链接*: [https://pbs.twimg.com/media/GHO3pwcbYAADoLl?format=png&name=orig](https://pbs.twimg.com/media/GHO3pwcbYAADoLl?format=png&name=orig)
+
+![image](https://pbs.twimg.com/media/GHO3pwcbYAADoLl?format=png&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GHO1NUmagAAaTJn?format=png&name=orig](https://pbs.twimg.com/media/GHO1NUmagAAaTJn?format=png&name=orig)
+
+![image](https://pbs.twimg.com/media/GHO1NUmagAAaTJn?format=png&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GHO1eJbaAAAYcDB?format=jpg&name=orig](https://pbs.twimg.com/media/GHO1eJbaAAAYcDB?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GHO1eJbaAAAYcDB?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GHO2mbxasAA3cgo?format=jpg&name=orig](https://pbs.twimg.com/media/GHO2mbxasAA3cgo?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GHO2mbxasAA3cgo?format=jpg&name=orig)
+
 ---
 
 ## 12. 推文 - @0xSunNFT
@@ -531,6 +671,24 @@ $Survior，$Ear和$FearNot这几个币，更多是短期情绪带动，车上大
 
 另外，确定性是随着市场走势、情绪、消息等等不断变化的，这一次相关代币从市值来看前后出现过至少5个龙头，有的昙花一现，有的真正成了某种程度上可以代表这一事件的Meme币，需要不断迭代自己的想法，做出对应的操作，而非拘泥或受限于固有思维。
 
+**图片** (4 张):
+
+*原图链接*: [https://pbs.twimg.com/media/GSqE5tkaEAA8GtY?format=jpg&name=orig](https://pbs.twimg.com/media/GSqE5tkaEAA8GtY?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GSqE5tkaEAA8GtY?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GSqE6fkagAAYQ-0?format=jpg&name=orig](https://pbs.twimg.com/media/GSqE6fkagAAYQ-0?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GSqE6fkagAAYQ-0?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GSqMonhbIAAuq47?format=jpg&name=orig](https://pbs.twimg.com/media/GSqMonhbIAAuq47?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GSqMonhbIAAuq47?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GSqPGJHboAAaFIK?format=jpg&name=orig](https://pbs.twimg.com/media/GSqPGJHboAAaFIK?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GSqPGJHboAAaFIK?format=jpg&name=orig)
+
 ---
 
 ## 15. 推文 - @0xSunNFT
@@ -578,6 +736,24 @@ $Survior，$Ear和$FearNot这几个币，更多是短期情绪带动，车上大
 
 
 Never miss a lucky day if you're on everyday!
+
+**图片** (4 张):
+
+*原图链接*: [https://pbs.twimg.com/media/GT0yz50acAAIWAl?format=jpg&name=orig](https://pbs.twimg.com/media/GT0yz50acAAIWAl?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GT0yz50acAAIWAl?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GT0zAV5aIAAaSZa?format=jpg&name=orig](https://pbs.twimg.com/media/GT0zAV5aIAAaSZa?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GT0zAV5aIAAaSZa?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GT0zJW-aEAAy8lt?format=jpg&name=orig](https://pbs.twimg.com/media/GT0zJW-aEAAy8lt?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GT0zJW-aEAAy8lt?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GT0zcjEbwAMx9tm?format=jpg&name=orig](https://pbs.twimg.com/media/GT0zcjEbwAMx9tm?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GT0zcjEbwAMx9tm?format=jpg&name=orig)
 
 ---
 
@@ -634,6 +810,24 @@ Never miss a lucky day if you're on everyday!
 
 但是，即便这种堪称捡钱的机会，我观察下来身边参与的人数并不算多，社区里喊了大半个月，最后也有很多群友因为各种原因没有参与，或许是不熟悉套保流程，或许是嫌操作步骤繁琐，或许是低估了开盘表现，或许是因为前几天低迷的市场行情导致执行力不足，错过的理由有千千万，而机会永远只会留给有准备的人。
 
+**图片** (4 张):
+
+*原图链接*: [https://pbs.twimg.com/media/GVp9jJibYAA3U7_?format=jpg&name=orig](https://pbs.twimg.com/media/GVp9jJibYAA3U7_?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GVp9jJibYAA3U7_?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GVp9lX1bwAAmHHE?format=png&name=orig](https://pbs.twimg.com/media/GVp9lX1bwAAmHHE?format=png&name=orig)
+
+![image](https://pbs.twimg.com/media/GVp9lX1bwAAmHHE?format=png&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GVp-Mb0aEAApj2W?format=png&name=orig](https://pbs.twimg.com/media/GVp-Mb0aEAApj2W?format=png&name=orig)
+
+![image](https://pbs.twimg.com/media/GVp-Mb0aEAApj2W?format=png&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GVp-VEZWIAA7NbN?format=jpg&name=orig](https://pbs.twimg.com/media/GVp-VEZWIAA7NbN?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GVp-VEZWIAA7NbN?format=jpg&name=orig)
+
 ---
 
 ## 18. 推文 - @0xSunNFT
@@ -645,6 +839,12 @@ Never miss a lucky day if you're on everyday!
 **内容**:
 
 从早到晚转了4条相关推文，希望你懂
+
+**图片** (1 张):
+
+*原图链接*: [https://pbs.twimg.com/media/GZnoshka4AANRna?format=jpg&name=orig](https://pbs.twimg.com/media/GZnoshka4AANRna?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GZnoshka4AANRna?format=jpg&name=orig)
 
 ---
 
@@ -693,6 +893,12 @@ Never miss a lucky day if you're on everyday!
 
 总之，交易是人生的一场修行，重要的是找到最契合自己的风格，并且不断精进，道阻且长，多学多练。
 
+**图片** (1 张):
+
+*原图链接*: [https://pbs.twimg.com/media/GcFnUMBbQAAYKOI?format=png&name=orig](https://pbs.twimg.com/media/GcFnUMBbQAAYKOI?format=png&name=orig)
+
+![image](https://pbs.twimg.com/media/GcFnUMBbQAAYKOI?format=png&name=orig)
+
 ---
 
 ## 21. 推文 - @0xSunNFT
@@ -700,6 +906,24 @@ Never miss a lucky day if you're on everyday!
 **发布时间**: 2024-11-16 08:59:26
 
 **推文链接**: [https://x.com/0xSunNFT/status/1857710057124728961](https://x.com/0xSunNFT/status/1857710057124728961)
+
+**图片** (4 张):
+
+*原图链接*: [https://pbs.twimg.com/media/GcfpXWea4AAm3-G?format=jpg&name=orig](https://pbs.twimg.com/media/GcfpXWea4AAm3-G?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GcfpXWea4AAm3-G?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GcfpXWgaMAA8EE4?format=jpg&name=orig](https://pbs.twimg.com/media/GcfpXWgaMAA8EE4?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GcfpXWgaMAA8EE4?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GcfpXWdaMAEKn8G?format=jpg&name=orig](https://pbs.twimg.com/media/GcfpXWdaMAEKn8G?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GcfpXWdaMAEKn8G?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GcfpXWcbAAAk31p?format=jpg&name=orig](https://pbs.twimg.com/media/GcfpXWcbAAAk31p?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GcfpXWcbAAAk31p?format=jpg&name=orig)
 
 ---
 
@@ -734,6 +958,24 @@ Never miss a lucky day if you're on everyday!
 
 这两个月行情实在太好，机会实在太多，发文总结的时间少了，总在不停地看项目、找信息、操作、思考，也非常佩服还能保持高质量输出的博主。这几天在枯坐之余尽量每天分配出一些时间，梳理AI Agent赛道Meme币的脉络，希望能在下周完成，以X文章的形式与大家见面。
 
+**图片** (4 张):
+
+*原图链接*: [https://pbs.twimg.com/media/GevrShSakAANvsA?format=jpg&name=orig](https://pbs.twimg.com/media/GevrShSakAANvsA?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GevrShSakAANvsA?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GevrShTbsAQlaou?format=jpg&name=orig](https://pbs.twimg.com/media/GevrShTbsAQlaou?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GevrShTbsAQlaou?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GevrShRbsAEgNyg?format=jpg&name=orig](https://pbs.twimg.com/media/GevrShRbsAEgNyg?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GevrShRbsAEgNyg?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GevrShSbsAAJNYP?format=jpg&name=orig](https://pbs.twimg.com/media/GevrShSbsAAJNYP?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GevrShSbsAAJNYP?format=jpg&name=orig)
+
 ---
 
 ## 23. 推文 - @0xSunNFT
@@ -758,6 +1000,16 @@ Never miss a lucky day if you're on everyday!
 
 想想也确实感慨，三年前我在读研的时候，因为大部分精力投入在币圈，一度觉得自己无法完成一篇CCF-A国际期刊的毕业要求，认真考虑过退学，但最终还是顺利毕业，三年后，之前敲代码啃论文的日日夜夜，竟然成了帮助我理解这波AI叙事的最大帮手，好像一切都是命运的安排。
 
+**图片** (2 张):
+
+*原图链接*: [https://pbs.twimg.com/media/GgfmMlwbQAAaVHL?format=jpg&name=orig](https://pbs.twimg.com/media/GgfmMlwbQAAaVHL?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GgfmMlwbQAAaVHL?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GgfmNp0a8AAHi-8?format=jpg&name=orig](https://pbs.twimg.com/media/GgfmNp0a8AAHi-8?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GgfmNp0a8AAHi-8?format=jpg&name=orig)
+
 ---
 
 ## 24. 推文 - @0xSunNFT
@@ -769,6 +1021,12 @@ Never miss a lucky day if you're on everyday!
 **内容**:
 
 根据信息，做出判断，下注即可，为自己负责，人只活一次。
+
+**图片** (1 张):
+
+*原图链接*: [https://pbs.twimg.com/media/GhivrlDWAAA7Ex3?format=jpg&name=orig](https://pbs.twimg.com/media/GhivrlDWAAA7Ex3?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GhivrlDWAAA7Ex3?format=jpg&name=orig)
 
 ---
 
@@ -1054,6 +1312,20 @@ Neiro犯了几个经典错误，第一个是这种级别的叙事，自己第一
 
 关于抄底，我这次在一月末判断走熊的理由是感知到了链上情绪很明显在退潮，而这几天的进一步暴跌是由特朗普关税政策导致，因为我对宏观并不是很了解，暂时还没有什么思路，再观察看看。这一轮的底部会在哪里，已经成了最值得思考的问题。
 
+**图片** (3 张):
+
+*原图链接*: [https://pbs.twimg.com/media/Gn6rFhYa4AAQEpr?format=jpg&name=orig](https://pbs.twimg.com/media/Gn6rFhYa4AAQEpr?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/Gn6rFhYa4AAQEpr?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/Gn6rFhXbwAAjbUX?format=jpg&name=orig](https://pbs.twimg.com/media/Gn6rFhXbwAAjbUX?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/Gn6rFhXbwAAjbUX?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/GkDoiF-aAAEdIh8?format=jpg&name=orig](https://pbs.twimg.com/media/GkDoiF-aAAEdIh8?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GkDoiF-aAAEdIh8?format=jpg&name=orig)
+
 ---
 
 ## 30. 推文 - @0xSunNFT
@@ -1136,6 +1408,12 @@ Gate的Pumpfun公售页面提前泄漏了，从各个数据来看大概率是真
 
 gate.com/zh/pumpfun-sale
 
+**图片** (1 张):
+
+*原图链接*: [https://pbs.twimg.com/media/GvR8n_fWoAANyw_?format=jpg&name=orig](https://pbs.twimg.com/media/GvR8n_fWoAANyw_?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/GvR8n_fWoAANyw_?format=jpg&name=orig)
+
 ---
 
 ## 34. 推文 - @0xSunNFT
@@ -1213,6 +1491,16 @@ gate.com/zh/pumpfun-sale
 
 
 目前从FDV上看依然是偏高的，但是短期对价格影响最大的因素是代币的真实流通量以及预售80%的后续解锁规则，我会结合这两方面的消息去判断要不要重新进场做一笔短线的多单或是中长线的空单，如果没有很明确的多空逻辑，就暂时不会参与WLFI的交易了。
+
+**图片** (2 张):
+
+*原图链接*: [https://pbs.twimg.com/media/Gz05UkdbMAAnt-A?format=jpg&name=orig](https://pbs.twimg.com/media/Gz05UkdbMAAnt-A?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/Gz05UkdbMAAnt-A?format=jpg&name=orig)
+
+*原图链接*: [https://pbs.twimg.com/media/Gz0GiA9bUAAGlv4?format=jpg&name=orig](https://pbs.twimg.com/media/Gz0GiA9bUAAGlv4?format=jpg&name=orig)
+
+![image](https://pbs.twimg.com/media/Gz0GiA9bUAAGlv4?format=jpg&name=orig)
 
 ---
 
