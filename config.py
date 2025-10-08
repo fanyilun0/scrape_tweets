@@ -47,6 +47,7 @@ MONITORED_USERS = [
     '0xsunnft',
     'cz_binance',
     'heyibinance',
+    'huigendeshen'
 ]
 
 # 是否启用用户白名单过滤（True=只推送白名单用户，False=推送所有用户）
