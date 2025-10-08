@@ -252,8 +252,6 @@ async def send_tweet_to_webhook(tweet_data):
         # 构建消息内容
         message_parts = []
         message_parts.append(f"🐦 新推文监听")
-        message_parts.append(f"")
-        
         # 用户信息
         if tweet_data['display_name']:
             message_parts.append(f"👤 作者: {tweet_data['display_name']} ({tweet_data['handle']})")
@@ -264,10 +262,6 @@ async def send_tweet_to_webhook(tweet_data):
         if tweet_data['time']:
             message_parts.append(f"🕐 时间: {tweet_data['time']}")
         
-        # 推文链接
-        if tweet_data['url']:
-            message_parts.append(f"🔗 链接: {tweet_data['url']}")
-        
         message_parts.append(f"")
         
         # 推文内容
@@ -275,6 +269,9 @@ async def send_tweet_to_webhook(tweet_data):
             message_parts.append(f"📝 内容:")
             message_parts.append(tweet_data['text'])
             message_parts.append(f"")
+        # 推文链接
+        if tweet_data['url']:
+            message_parts.append(f"🔗 链接: {tweet_data['url']}")
         
         # 图片信息
         if tweet_data['images']:
