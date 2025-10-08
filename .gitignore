@@ -9,6 +9,7 @@ tweets_images_*/
 
 # 推送记录文件（可选是否提交）
 pushed_tweet_ids.json
+scraped_tweet_ids.json
 
 # Python 缓存
 __pycache__/

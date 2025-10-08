@@ -1,271 +1,321 @@
-好的，这是一个非常棒的优化点。监控白名单用户的转推，可以帮助我们发现他们认为有价值的内容，从而捕获到更多潜在的信息。
+我们需要一个更灵活的过滤规则。一个合理的逻辑应该是：
 
-要实现这个功能，我们需要分两步走：
+只要“转推者”或“原作者”中，任何一方在我们的白名单里，这条推文就应该被捕获和推送。
 
-1.  **识别并抓取转推信息**：修改现有的抓取逻辑，使其能够分辨出一条推文是原创还是转推，并能同时提取出“转推者”和“原作者”的信息。
-2.  **优化推送内容的格式**：设计一种新的消息格式，在推送时能清晰地展示这是一条转推，并突出“谁转推了谁的内容”。
+这样既能保证我们看到白名单用户的原创内容，也能看到他们的转推（放大）行为，同时还能看到白名单用户的原创内容被别人转推的情况。
 
------
+修改后的代码
 
-### 实现思路
+请将你的 extract_tweet_data 函数中的白名单过滤逻辑部分，替换为以下代码。我只修改了这一个函数，其他部分保持不变即可。
 
-在Twitter/X的页面结构中，一条转推（Retweet）通常包含两个部分：
-
-1.  **社交上下文 (Social Context)**：在推文顶部会有一小行文字，如“`[白名单用户] Retweeted`”。这部分告诉我们是谁执行了“转推”这个动作。
-2.  **原始推文 (Original Tweet)**：下面嵌入了被转发的完整推文内容，包括原作者、正文、图片等。
-
-我们的核心思路就是：**在遍历每条推文时，首先检查是否存在“社交上下文”，如果存在，就判断执行转推的用户是否在我们的白名单里。**
-
-**具体步骤：**
-
-1.  **修改 `extract_tweet_data` 函数**：
-
-      * 增加一个逻辑来检测推文 `article` 元素中是否存在表明“转推”的特定元素。
-      * 如果检测到是转推：
-          * 从“社交上下文”中提取**转推者**的用户名 (`retweeter_handle`)。
-          * 将被嵌入的**原始推文**视为主要内容，从中提取原作者、正文、图片等信息。
-          * 返回一个特殊的数据结构，比如增加一个字段 `is_retweet: True`，并同时包含 `retweeter` 和 `original_author` 的信息。
-      * 如果不是转推，则按原逻辑处理。
-
-2.  **修改 `is_user_in_whitelist` 的使用方式**：
-
-      * 现在我们需要检查两种情况：
-          * 对于原创推文，检查**作者**是否在白名单。
-          * 对于转推，检查**转推者**是否在白名单。
-      * 这个检查逻辑最好直接整合进 `extract_tweet_data` 函数，这样该函数返回的数据就都是我们想要的了。
-
-3.  **修改 `send_tweet_to_webhook` 函数**：
-
-      * 在函数内部，通过检查 `tweet_data.get('is_retweet')` 字段来判断推文类型。
-      * 如果是转推，就使用新的、优化过的消息模板来组织推送内容。
-      * 如果是原创，沿用旧的模板。
-
------
-
-### 代码调整实现
-
-以下是具体的代码修改建议，您可以将其应用到您现有的脚本中。
-
-#### 1\. 优化 `extract_tweet_data` 函数
-
-这是最核心的修改。我们需要让这个函数变得更智能，能识别转推并提取所有需要的信息。
-
-```python
+Python
 def extract_tweet_data(tweet_article):
-    """
-    从推文元素中提取数据，能够区分原创和转推
+    """从推文元素中提取数据，能够区分原创和转推
     
     Args:
         tweet_article: Selenium WebElement，推文的article元素
         
     Returns:
-        dict: 包含推文数据的字典，如果是不需要关注的推文则返回None
+        dict: 包含推文数据的字典，如果不符合白名单要求则返回None
+    """
+    try:
+        # ... (前面的代码，从 try: 到 is_retweet = False 的部分都保持不变) ...
+        # ... (提取转推者信息 retweeter_handle_raw 的代码也保持不变) ...
+        # ... (提取原作者信息 user_handle_raw 的代码也保持不变) ...
+        
+        # ==================== 关键修改点在这里 ====================
+        # 新的、更灵活的白名单过滤逻辑
+        # 只要 转推者 或 原作者 任何一方在白名单内，就通过
+        if ENABLE_USER_FILTER:
+            is_author_in_list = is_user_in_whitelist(user_handle_raw)
+            is_retweeter_in_list = False
+            
+            if is_retweet:
+                is_retweeter_in_list = is_user_in_whitelist(retweeter_handle_raw)
+
+            # 核心判断：
+            # 1. 如果是原创推文，作者必须在列表内 (is_author_in_list)
+            # 2. 如果是转推，转推者 或 原作者 至少有一个在列表内
+            if not is_author_in_list and not is_retweeter_in_list:
+                # logger.debug(f"跳过: 转推者 @{retweeter_handle_raw} 和原作者 @{user_handle_raw} 均不在白名单")
+                return None # 只有当两者都不在白名单时，才跳过
+        # ==================== 修改结束 ====================
+        
+        
+        # 验证提取的用户信息
+        if is_retweet:
+            if not retweeter_handle_raw:
+                logger.warning("转推检测成功，但未能提取到转推者用户名，可能存在解析问题")
+            if not user_handle_raw:
+                logger.warning("转推检测成功，但未能提取到原作者用户名，可能存在解析问题")
+        else:
+            if not user_handle_raw:
+                logger.warning("原创推文未能提取到作者用户名，可能存在解析问题")
+        
+        # ... (函数剩余的部分，提取推文ID、URL、正文等，全部保持不变) ...
+
+        # 构建返回数据
+        tweet_data = {
+            "id": tweet_id,
+            "url": tweet_url,
+            "is_retweet": is_retweet,
+            "retweeter": {  # 转推者信息
+                "handle_raw": retweeter_handle_raw,
+                "display_name": retweeter_display_name
+            },
+            "original_author": {  # 原作者信息
+                "handle_raw": user_handle_raw,
+                "display_name": user_display_name
+            },
+            "time": tweet_time,
+            "text": tweet_text,
+            "images": image_urls
+        }
+        
+        return tweet_data
+        
+    except Exception as e:
+        logger.warning(f"提取推文数据失败: {e}")
+        return None
+总结
+
+只需将 extract_tweet_data 函数中的旧过滤逻辑块替换为新的、更灵活的逻辑即可。这个改动将确保：
+
+白名单用户 A 的原创推文 -> 捕获
+
+白名单用户 A 转推了路人 B 的推文 -> 捕获
+
+路人 C 转推了白名单用户 A 的推文 -> 捕获
+
+路人 C 转推了路人 B 的推文 -> 忽略
+
+这样就能全面地监控你关心的账号及其相关动态了。
+
+
+
+当然可以。这是一个非常棒的提议，能让推送的信息上下文更完整。当白名单用户进行\*\*评论（Reply）**或**引用转发（Quote Tweet）\*\*时，我们可以抓取被评论或被引用的那条原始推文，然后将两条信息组合在一起进行推送。
+
+这需要我们对两部分代码进行升级：
+
+1.  **`extract_tweet_data` 函数**：需要增加逻辑来识别并提取“引用的/回复的”原始推文内容。
+2.  **`send_tweet_to_webhook` 函数**：需要美化排版，将两条推文的内容清晰地展示出来。
+
+-----
+
+### 第 1 步：升级 `extract_tweet_data` 函数
+
+我们需要在这个函数里增加一个“侦察兵”，当它解析一条推文时，会额外检查这条推文内部是否“嵌套”了另一条推文。
+
+请用下面的新版本替换你原来的 `extract_tweet_data` 函数。
+
+```python
+def extract_tweet_data(tweet_article):
+    """从推文元素中提取数据，能够区分原创、转推、引用和回复
+    
+    Args:
+        tweet_article: Selenium WebElement，推文的article元素
+        
+    Returns:
+        dict: 包含推文数据的字典，如果不符合白名单要求则返回None
     """
     try:
         is_retweet = False
         retweeter_handle_raw = ""
         retweeter_display_name = ""
+        quoted_tweet_data = None # <<<< 新增：用于存放被引用的推文信息
+        
+        # ... (检测是否为转推的代码保持不变) ...
+        # ... (提取转推者信息的代码保持不变) ...
 
-        # --- 新增：检测是否为转推 ---
-        try:
-            # 转推的上下文通常在这个testid的div里
-            social_context = tweet_article.find_element(By.XPATH, ".//div[@data-testid='socialContext']")
-            if "Retweeted" in social_context.text or "转推了" in social_context.text:
-                is_retweet = True
-                # 提取转推者的用户名
-                retweeter_link = social_context.find_element(By.TAG_NAME, "a")
-                retweeter_handle_raw = retweeter_link.get_attribute('href').split('/')[-1]
-                retweeter_display_name = social_context.text.replace("Retweeted", "").strip()
-        except NoSuchElementException:
-            # 找不到socialContext，说明是原创推文
-            is_retweet = False
-
-        # 提取推文正文、用户名等核心信息（无论是原创还是转推，这部分结构是相似的）
-        # ... (这里沿用您原函数大部分的提取逻辑) ...
-        # ... 为了简洁，下面只列出关键部分的提取 ...
-
-        # 提取用户名和显示名称 (这部分提取到的是原作者)
+        # 提取用户名和显示名称（这是当前推文的作者信息）
         user_handle_raw = ""
         user_display_name = ""
         try:
-            user_name_div = tweet_article.find_element(By.XPATH, ".//div[@data-testid='User-Name']")
-            user_handle_raw = user_name_div.find_element(By.XPATH, ".//a[contains(@href, '/')]").get_attribute('href').split('/')[-1]
-            user_display_name = user_name_div.find_element(By.XPATH, ".//span[contains(@class, 'css-1jxf684')]").text
+            # ... (提取 user_handle_raw 和 user_display_name 的代码保持不变) ...
         except NoSuchElementException:
-            pass # 提取失败则为空
+            pass
 
-        # --- 新增：白名单过滤逻辑 ---
-        # 如果是转推，我们关心的是转推者是否在白名单
-        if is_retweet:
-            if not is_user_in_whitelist(retweeter_handle_raw):
-                # print(f"  ⊘ 跳过转推（转推者 {retweeter_handle_raw} 不在白名单）")
-                return None # 直接返回None，跳过这条推文
-        # 如果是原创，我们关心的是作者是否在白名单
-        else:
-            if not is_user_in_whitelist(user_handle_raw):
-                # print(f"  ⊘ 跳过原创推文（作者 {user_handle_raw} 不在白名单）")
-                return None # 直接返回None，跳过这条推文
-
-        # 只有通过白名单检查的推文才会继续执行下面的提取逻辑
-        # ... (继续执行您原有的 tweet_id, url, text, images, time 的提取逻辑) ...
-        # (以下为示例)
-        tweet_url = None
-        tweet_id = None
-        tweet_link_elements = tweet_article.find_elements(By.XPATH, ".//a[contains(@href, '/status/')]")
-        for link in tweet_link_elements:
-            href = link.get_attribute('href')
-            if '/status/' in href and 'analytics' not in href:
-                tweet_url = href
-                tweet_id = href.split('/status/')[-1].split('?')[0]
-                break
+        # ... (白名单过滤逻辑保持不变) ...
         
-        if not tweet_id: return None
+        # ... (验证提取的用户信息的代码保持不变) ...
 
-        tweet_text = tweet_article.find_element(By.XPATH, ".//div[@data-testid='tweetText']").text if tweet_article.find_elements(By.XPATH, ".//div[@data-testid='tweetText']") else ""
-        tweet_time_str = tweet_article.find_element(By.TAG_NAME, "time").get_attribute('datetime') if tweet_article.find_elements(By.TAG_NAME, "time") else ""
+        # ... (提取推文ID和URL的代码保持不变) ...
         
-        image_urls = []
-        photo_divs = tweet_article.find_elements(By.XPATH, ".//div[@data-testid='tweetPhoto']")
-        for photo_div in photo_divs:
-            img_elements = photo_div.find_elements(By.TAG_NAME, "img")
-            for img_element in img_elements:
-                img_url = img_element.get_attribute('src')
-                if img_url and 'name=' in img_url:
-                    image_urls.append(re.sub(r'name=\w+', 'name=orig', img_url))
+        # 提取推文正文
+        tweet_text = ""
+        try:
+            tweet_text_element = tweet_article.find_element(By.XPATH, ".//div[@data-testid='tweetText']")
+            tweet_text = tweet_text_element.text
+        except NoSuchElementException:
+            pass
+            
+        # ==================== 新增功能：提取被引用/回复的推文 ====================
+        try:
+            # 推文中被引用的部分通常在一个带有边框的div里
+            # 这个XPath试图找到那个作为“容器”的div
+            quoted_container = tweet_article.find_element(By.XPATH, ".//div[@role='link']/ancestor::div[contains(@class, 'r-1ssbv6i')]")
+            
+            if quoted_container:
+                # 在这个容器内，提取原始推文的作者和内容
+                quoted_author_handle = ""
+                quoted_author_name = ""
+                quoted_text = ""
 
-        return {
+                try:
+                    # 提取作者信息
+                    quoted_user_div = quoted_container.find_element(By.XPATH, ".//div[@data-testid='User-Name']")
+                    spans = quoted_user_div.find_elements(By.TAG_NAME, "span")
+                    for span in spans:
+                        text = span.text.strip()
+                        if text.startswith('@'):
+                            quoted_author_handle = text[1:]
+                        elif text:
+                            quoted_author_name = text
+                except Exception as e:
+                    logger.debug(f"提取被引用推文的作者失败: {e}")
+
+                try:
+                    # 提取正文
+                    quoted_text_div = quoted_container.find_element(By.XPATH, ".//div[@data-testid='tweetText']")
+                    quoted_text = quoted_text_div.text
+                except Exception as e:
+                    logger.debug(f"提取被引用推文的正文失败: {e}")
+                
+                # 如果成功提取到信息，就组装起来
+                if quoted_author_handle or quoted_text:
+                    quoted_tweet_data = {
+                        "author_handle": quoted_author_handle,
+                        "author_display_name": quoted_author_name,
+                        "text": quoted_text
+                    }
+        except NoSuchElementException:
+            # 没找到，说明不是引用或回复，是正常情况
+            pass
+        except Exception as e:
+            logger.warning(f"尝试提取被引用推文时发生未知错误: {e}")
+        # ============================ 新增功能结束 ============================
+
+        # ... (提取推文时间的代码保持不变) ...
+        
+        # ... (提取图片URL的代码保持不变) ...
+        
+        # 构建返回数据
+        tweet_data = {
             "id": tweet_id,
             "url": tweet_url,
             "is_retweet": is_retweet,
-            "retweeter": { # 转推者信息
+            "retweeter": {
                 "handle_raw": retweeter_handle_raw,
                 "display_name": retweeter_display_name
             },
-            "original_author": { # 原作者信息
+            "original_author": {
                 "handle_raw": user_handle_raw,
                 "display_name": user_display_name
             },
-            "time": datetime.fromisoformat(tweet_time_str.replace('Z', '+00:00')).strftime('%Y-%m-%d %H:%M:%S') if tweet_time_str else "",
+            "time": tweet_time,
             "text": tweet_text,
-            "images": image_urls
+            "images": image_urls,
+            "quoted": quoted_tweet_data # <<<< 新增：将提取到的引用推文加入最终数据
         }
+        
+        return tweet_data
+        
     except Exception as e:
-        # print(f"  × 提取推文数据失败: {e}") # 调试时可以打开
+        logger.warning(f"提取推文数据失败: {e}")
         return None
 ```
 
-#### 2\. 简化 `scrape_list_tweets` 函数
+### 第 2 步：升级 `send_tweet_to_webhook` 函数
 
-因为过滤逻辑已经移入了 `extract_tweet_data`，这里的循环可以简化。
+现在我们的 `tweet_data` 里可能包含被引用的推文信息了，接下来就要在发送通知时把它展示出来。
 
-```python
-# scrape_list_tweets 函数中的循环部分可以修改为：
-
-for article in tweet_articles:
-    if len(tweets_data) >= max_tweets:
-        break
-    
-    # extract_tweet_data现在会返回None如果推文不符合白名单要求
-    tweet_data = extract_tweet_data(article) 
-    
-    if tweet_data and tweet_data['id'] not in processed_ids:
-        processed_ids.add(tweet_data['id'])
-        tweets_data.append(tweet_data)
-        if tweet_data['is_retweet']:
-            print(f"  ✓ 提取转推: {tweet_data['retweeter']['handle_raw']} RT @{tweet_data['original_author']['handle_raw']}")
-        else:
-            print(f"  ✓ 提取原创: @{tweet_data['original_author']['handle_raw']}")
-
-# ... 后续滚动逻辑中的循环也做类似修改 ...
-```
-
-#### 3\. 优化 `send_tweet_to_webhook` 函数（优化推送内容）
-
-这是向用户展示最终成果的部分。我们需要为转推设计一个清晰的格式。
+请用下面的新版本替换你原来的 `send_tweet_to_webhook` 函数。
 
 ```python
 async def send_tweet_to_webhook(tweet_data):
-    """将推文数据发送到webhook，为转推提供专门格式"""
+    """将推文数据发送到webhook，为转推、引用和回复提供专门格式
+    
+    Args:
+        tweet_data: 推文数据字典
+    """
     try:
         message_parts = []
         
-        # --- 根据是否为转推，生成不同格式的消息 ---
+        # 判断是原创、转推还是引用/回复
+        quoted_data = tweet_data.get('quoted')
+        
         if tweet_data.get('is_retweet'):
-            # 这是转推
-            message_parts.append(f"🔄 **用户转推提醒**")
-            retweeter = tweet_data['retweeter']
-            original_author = tweet_data['original_author']
-            
-            # 突出转推者
-            message_parts.append(f"👤 **转推者**: {retweeter['display_name']} (@{retweeter['handle_raw']})")
-            # 标明原作者
-            message_parts.append(f"✍️ **原作者**: {original_author['display_name']} (@{original_author['handle_raw']})")
-        else:
-            # 这是原创推文
-            message_parts.append(f"🐦 **新推文监听**")
-            author = tweet_data['original_author'] # 对于原创，original_author就是作者
-            message_parts.append(f"👤 **作者**: {author['display_name']} (@{author['handle_raw']})")
+            # 格式化转推消息
+            message_parts.append(f"🔄 用户转推提醒")
+            # ... (这部分转推的格式化逻辑保持不变) ...
 
+        elif quoted_data:
+            # <<<< 新增：格式化引用/回复消息
+            message_parts.append(f"💬 新的回复/引用")
+            author = tweet_data['original_author']
+            if author['display_name']:
+                message_parts.append(f"👤 作者: {author['display_name']} (@{author['handle_raw']})")
+            else:
+                message_parts.append(f"👤 作者: @{author['handle_raw']}")
+        else:
+            # 格式化原创推文消息
+            message_parts.append(f"🐦 新推文监听")
+            # ... (这部分原创的格式化逻辑保持不变) ...
+            
         if tweet_data['time']:
-            message_parts.append(f"🕐 **时间**: {tweet_data['time']}")
+            message_parts.append(f"🕐 时间: {tweet_data['time']}")
         
         message_parts.append("")
         
         if tweet_data['text']:
-            message_parts.append(f"📝 **内容**:")
+            message_parts.append(f"📝 内容:")
             message_parts.append(tweet_data['text'])
             message_parts.append("")
+
+        # ==================== 新增功能：将被引用的推文内容附加到消息中 ====================
+        if quoted_data:
+            # 添加一个漂亮的分割线和标题
+            message_parts.append(" L " + "─" * 15 + " 引用/回复 " + "─" * 15)
             
+            # 格式化被引用推文的作者信息
+            quoted_author_info = f"@{quoted_data['author_handle']}"
+            if quoted_data['author_display_name']:
+                quoted_author_info = f"{quoted_data['author_display_name']} ({quoted_author_info})"
+            
+            message_parts.append(f"🗣️  **{quoted_author_info}** 说:")
+            
+            # 使用Markdown的引用格式(>)来展示原文
+            original_text = quoted_data.get('text', '[内容为空]')
+            quoted_text_formatted = "\n".join([f"> {line}" for line in original_text.split('\n')])
+            message_parts.append(quoted_text_formatted)
+            message_parts.append("─" * 40)
+        # ============================ 新增功能结束 ============================
+
         if tweet_data['url']:
-            message_parts.append(f"🔗 **链接**: {tweet_data['url']}")
-            
+            message_parts.append(f"🔗 链接: {tweet_data['url']}")
+        
         if tweet_data['images']:
             message_parts.append(f"🖼️ 包含 {len(tweet_data['images'])} 张图片")
-            
+        
+        # 发送文本消息
         message = "\n".join(message_parts)
-        print(f"  准备发送通知...")
         await send_message_async(message, msg_type="text")
         
-        # ... 后续发送图片的逻辑保持不变 ...
+        # ... (发送图片的代码保持不变) ...
         
-        print(f"✓ 推文推送完成: {tweet_data['id']}")
         return True
         
     except Exception as e:
-        print(f"× 推送推文失败: {e}")
+        logger.error(f"推送推文失败: {e}")
+        error_detail = traceback.format_exc()
+        await send_error_to_webhook("推送推文到webhook失败", error_detail)
         return False
 ```
 
 ### 总结
 
-通过以上三步修改，您的脚本现在就具备了监控白名单用户转推的能力。
+完成以上两处修改后，你的脚本现在就拥有了“超级上下文”能力：
 
-  * **推送效果预览（转推）**:
-
-    ```
-    🔄 用户转推提醒
-    👤 转推者: some_KOL (@some_KOL_handle)
-    ✍️ 原作者: Original Author (@original_author_handle)
-    🕐 时间: 2025-10-08 15:30:00
-
-    📝 内容:
-    This is the content of the original tweet that was retweeted.
-
-    🔗 链接: https://x.com/original_author_handle/status/123456789
-    🖼️ 包含 1 张图片
-    ```
-
-  * **推送效果预览（原创）**:
-
-    ```
-    🐦 新推文监听
-    👤 作者: some_KOL (@some_KOL_handle)
-    🕐 时间: 2025-10-08 15:35:00
-
-    📝 内容:
-    This is an original tweet from the whitelisted user.
-
-    🔗 链接: https://x.com/some_KOL_handle/status/987654321
-    ```
-
-这样的格式既能清晰地区分事件类型，又能完整地提供上下文信息，大大提升了监控脚本的价值。
+  * 当白名单用户发布原创内容时，你会收到通知。
+  * 当白名单用户**转推**别人的内容时，你会收到转推提醒。
+  * 当白名单用户**评论或引用**别人的内容时，你会收到一条组合消息，其中既包含他的评论，也包含了被他评论的原始内容，让你一目了然，无需跳转查看。

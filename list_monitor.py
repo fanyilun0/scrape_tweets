@@ -199,43 +199,81 @@ def download_image_to_base64(url, proxy=None):
         return None
 
 def extract_tweet_data(tweet_article):
-    """从推文元素中提取数据，能够区分原创和转推
+    """从推文元素中提取数据，能够区分原创、转推、引用和回复
     
     Args:
         tweet_article: Selenium WebElement，推文的article元素
         
     Returns:
         dict: 包含推文数据的字典，如果不符合白名单要求则返回None
+        
+    支持的推文类型：
+    - 原创推文 (Original): 用户发布的原始内容
+    - 转推 (Retweet): 用户转发他人的推文
+    - 引用推文 (Quote): 用户在转发时添加了自己的评论
+    - 回复推文 (Reply): 用户回复他人的推文
     """
     try:
+        # 推文类型标识
         is_retweet = False
+        is_reply = False
+        is_quote = False
+        
+        # 转推者信息
         retweeter_handle_raw = ""
         retweeter_display_name = ""
+        
+        # 被引用/回复的推文信息
+        quoted_tweet_data = None
+        reply_to_users = []  # 回复的用户列表
         
         # 获取推文的原始HTML用于调试 (仅在需要时启用)
         # tweet_html = tweet_article.get_attribute('outerHTML')
         # logger.debug(f"推文HTML片段: {tweet_html[:200]}...")
         
-        # 检测是否为转推 - 多种策略
+        # ==================== 第一步：检测回复推文 ====================
+        # 回复推文会在顶部显示 "Replying to @xxx" 或 "回复 @xxx"
+        try:
+            # 查找回复标识元素
+            reply_element = tweet_article.find_element(By.XPATH, ".//div[@data-testid='reply']")
+            if reply_element:
+                is_reply = True
+                reply_text = reply_element.text
+                
+                # 提取被回复的用户列表
+                # 例如: "Replying to @user1 and @user2"
+                reply_links = reply_element.find_elements(By.TAG_NAME, "a")
+                for link in reply_links:
+                    href = link.get_attribute('href')
+                    if href and '/status/' not in href:
+                        username = href.split('/')[-1].split('?')[0].split('#')[0]
+                        if username and username not in reply_to_users:
+                            reply_to_users.append(username)
+                
+                logger.debug(f"检测到回复推文，回复给: {', '.join(['@' + u for u in reply_to_users])}")
+        except NoSuchElementException:
+            # 没有回复标识，不是回复推文
+            pass
+        
+        # ==================== 第二步：检测转推 ====================
+        # 注意：转推和引用是互斥的，转推不能有自己的评论
         try:
             # 策略1: 检查socialContext (最常见)
             social_context = tweet_article.find_element(By.XPATH, ".//div[@data-testid='socialContext']")
             context_text = social_context.text
-            logger.debug(f"找到socialContext，内容: {context_text}")
             
             # 转推关键词列表 (支持多语言)
-            retweets_keywords = [
+            retweet_keywords = [
                 "Retweeted", "转推了", "已转推", "已转帖", 
                 "reposted", "转发了", "retweet", "Retweet",
                 "Reposted"  # X 的新术语
             ]
             matched_keyword = None
             
-            for keyword in retweets_keywords:
+            for keyword in retweet_keywords:
                 if keyword.lower() in context_text.lower():  # 不区分大小写
                     matched_keyword = keyword
                     is_retweet = True
-                    logger.debug(f"✓ 匹配到转推关键词: {keyword}")
                     break
             
             if is_retweet:
@@ -265,34 +303,21 @@ def extract_tweet_data(tweet_article):
                             spans = social_context.find_elements(By.TAG_NAME, "span")
                             for span in spans:
                                 text = span.text.strip()
-                                if text and text not in retweets_keywords:
+                                if text and text not in retweet_keywords:
                                     retweeter_display_name = text
                                     break
                         except:
                             pass
                     
-                    logger.debug(f"检测到转推 - 转推者: @{retweeter_handle_raw} ({retweeter_display_name})")
                 except Exception as e:
-                    logger.debug(f"提取转推者信息失败: {e}")
+                    logger.warning(f"提取转推者信息失败: {e}")
                     
         except NoSuchElementException:
-            # logger.debug("未找到socialContext元素")
-            # 策略2: 检查是否有转推图标 (backup)
-            try:
-                retweet_icon = tweet_article.find_element(By.XPATH, ".//div[@data-testid='retweet']")
-                # 如果找到了转推图标，说明可能是转推
-                # 但这个不太可靠，仅作为备用检测
-                #logger.debug("找到retweet图标，但无socialContext，可能是特殊情况")
-                pass
-            except NoSuchElementException:
-                #logger.debug("也未找到retweet图标")
-                pass
-            
-            # 找不到socialContext，说明很可能是原创推文
+            # 没有socialContext，说明不是转推
             is_retweet = False
-            # logger.debug("判定为原创推文")
         
-        # 提取用户名和显示名称（这是原作者的信息）
+        # ==================== 第三步：提取用户信息 ====================
+        # 提取用户名和显示名称（这是推文作者的信息）
         user_handle_raw = ""
         user_display_name = ""
         try:
@@ -310,9 +335,8 @@ def extract_tweet_data(tweet_article):
                         if user_handle_raw:  # 找到了就退出
                             break
                 
-                logger.debug(f"提取到用户名: @{user_handle_raw}")
             except Exception as e:
-                logger.debug(f"提取用户名失败: {e}")
+                logger.warning(f"提取用户名失败: {e}")
             
             # 提取显示名称
             try:
@@ -340,32 +364,31 @@ def extract_tweet_data(tweet_article):
                 
                 if display_name_element:
                     user_display_name = display_name_element.text.strip()
-                    logger.debug(f"提取到显示名称: {user_display_name}")
                     
             except Exception as e:
-                logger.debug(f"提取显示名称失败: {e}")
+                logger.warning(f"提取显示名称失败: {e}")
                 
         except NoSuchElementException:
             #logger.debug("未找到User-Name元素")
             pass
         
-        # 白名单过滤逻辑
-        # 如果是转推，检查转推者是否在白名单
-        if is_retweet:
-            # logger.debug(f"转推检测 - 转推者: @{retweeter_handle_raw}, 原作者: @{user_handle_raw}")
-            if not is_user_in_whitelist(retweeter_handle_raw):
-                # logger.debug(f"跳过转推 - 转推者 @{retweeter_handle_raw} 不在白名单")
-                return None  # 转推者不在白名单，跳过
-            # logger.debug(f"✓ 转推者 @{retweeter_handle_raw} 在白名单中")
-        # 如果是原创，检查作者是否在白名单
-        else:
-            # logger.debug(f"原创推文检测 - 作者: @{user_handle_raw}")
-            if not is_user_in_whitelist(user_handle_raw):
-                # logger.debug(f"跳过原创 - 作者 @{user_handle_raw} 不在白名单")
-                return None  # 作者不在白名单，跳过
-            # logger.debug(f"✓ 作者 @{user_handle_raw} 在白名单中")
+        # ==================== 第四步：白名单过滤 ====================
+        # 只要 转推者 或 原作者 任何一方在白名单内，就通过
+        if ENABLE_USER_FILTER:
+            is_author_in_list = is_user_in_whitelist(user_handle_raw)
+            is_retweeter_in_list = False
+            
+            if is_retweet:
+                is_retweeter_in_list = is_user_in_whitelist(retweeter_handle_raw)
+
+            # 核心判断：
+            # 1. 如果是原创推文、回复或引用，作者必须在列表内
+            # 2. 如果是转推，转推者 或 原作者 至少有一个在列表内
+            if not is_author_in_list and not is_retweeter_in_list:
+                # logger.debug(f"跳过: 转推者 @{retweeter_handle_raw} 和原作者 @{user_handle_raw} 均不在白名单")
+                return None  # 只有当两者都不在白名单时，才跳过
+        # ==================== 白名单过滤结束 ====================
         
-        # 只有通过白名单检查的推文才会继续提取其他信息
         
         # 验证提取的用户信息
         if is_retweet:
@@ -401,6 +424,105 @@ def extract_tweet_data(tweet_article):
         except NoSuchElementException:
             pass
         
+        # ==================== 第五步：提取引用推文（Quote Tweet）====================
+        # 引用推文：用户在转发时添加了自己的评论，会嵌套显示原推文
+        # 注意：只有非转推的推文才可能是引用推文（转推和引用是互斥的）
+        if not is_retweet:
+            try:
+                # 查找嵌套的引用推文容器
+                # 引用推文通常在一个带有边框的卡片容器中
+                quoted_container = None
+                
+                # 方法1: 通过 data-testid='card.wrapper' 查找（最精确）
+                try:
+                    quoted_container = tweet_article.find_element(By.XPATH, ".//div[@data-testid='card.wrapper']")
+                    logger.debug("通过card.wrapper找到引用推文容器")
+                except:
+                    pass
+                
+                # 方法2: 查找嵌套的article元素（引用推文有时会用嵌套的article）
+                if not quoted_container:
+                    try:
+                        # 在当前推文内查找嵌套的article（但不是自己）
+                        nested_articles = tweet_article.find_elements(By.XPATH, ".//article[@data-testid='tweet']")
+                        if len(nested_articles) > 0:
+                            # 如果找到嵌套的article，说明是引用推文
+                            quoted_container = nested_articles[0]
+                            logger.debug("通过嵌套article找到引用推文容器")
+                    except:
+                        pass
+                
+                # 方法3: 通过特定的CSS类查找引用容器
+                if not quoted_container:
+                    try:
+                        # 引用推文容器通常有特定的样式
+                        quoted_container = tweet_article.find_element(By.XPATH, ".//div[contains(@class, 'r-1udh08x') and .//div[@data-testid='User-Name']]")
+                        logger.debug("通过CSS类找到引用推文容器")
+                    except:
+                        pass
+                
+                if quoted_container:
+                    is_quote = True
+                    # 提取被引用推文的信息
+                    quoted_author_handle = ""
+                    quoted_author_name = ""
+                    quoted_text = ""
+                    quoted_tweet_url = ""
+
+                    try:
+                        # 提取作者信息
+                        quoted_user_div = quoted_container.find_element(By.XPATH, ".//div[@data-testid='User-Name']")
+                        
+                        # 提取handle (@username)
+                        handle_links = quoted_user_div.find_elements(By.XPATH, ".//a[contains(@href, '/')]")
+                        for link in handle_links:
+                            href = link.get_attribute('href')
+                            if href and '/status/' not in href and '/photo/' not in href:
+                                quoted_author_handle = href.split('/')[-1].split('?')[0].split('#')[0]
+                                if quoted_author_handle:
+                                    break
+                        
+                        # 提取显示名称
+                        spans = quoted_user_div.find_elements(By.TAG_NAME, "span")
+                        for span in spans:
+                            text = span.text.strip()
+                            if text and not text.startswith('@') and len(text) > 0:
+                                quoted_author_name = text
+                                break
+                    except Exception as e:
+                        logger.debug(f"提取被引用推文的作者失败: {e}")
+
+                    try:
+                        # 提取正文
+                        quoted_text_div = quoted_container.find_element(By.XPATH, ".//div[@data-testid='tweetText']")
+                        quoted_text = quoted_text_div.text
+                    except Exception as e:
+                        logger.debug(f"提取被引用推文的正文失败: {e}")
+                    
+                    try:
+                        # 提取被引用推文的URL
+                        quoted_links = quoted_container.find_elements(By.XPATH, ".//a[contains(@href, '/status/')]")
+                        for link in quoted_links:
+                            href = link.get_attribute('href')
+                            if href and '/status/' in href and '/analytics' not in href:
+                                quoted_tweet_url = href.split('?')[0]
+                                break
+                    except:
+                        pass
+                    
+                    # 如果成功提取到信息，就组装起来
+                    if quoted_author_handle or quoted_text:
+                        quoted_tweet_data = {
+                            "author_handle": quoted_author_handle,
+                            "author_display_name": quoted_author_name,
+                            "text": quoted_text,
+                            "url": quoted_tweet_url
+                        }
+                        logger.debug(f"检测到引用推文: @{quoted_author_handle}")
+            except Exception as e:
+                logger.debug(f"尝试提取引用推文时发生错误: {e}")
+        # ==================== 提取引用推文结束 ====================
+        
         # 提取推文时间
         tweet_time = ""
         try:
@@ -435,39 +557,46 @@ def extract_tweet_data(tweet_article):
         except:
             pass
         
-        # 构建返回数据
+        # ==================== 第六步：构建返回数据 ====================
         tweet_data = {
             "id": tweet_id,
             "url": tweet_url,
-            "is_retweet": is_retweet,
-            "retweeter": {  # 转推者信息
+            
+            # 推文类型标识
+            "is_retweet": is_retweet,    # 是否为转推
+            "is_reply": is_reply,        # 是否为回复
+            "is_quote": is_quote,        # 是否为引用推文
+            
+            # 用户信息
+            "retweeter": {  # 转推者信息（仅转推时有效）
                 "handle_raw": retweeter_handle_raw,
                 "display_name": retweeter_display_name
             },
-            "original_author": {  # 原作者信息
+            "author": {  # 推文作者信息
                 "handle_raw": user_handle_raw,
                 "display_name": user_display_name
             },
+            
+            # 回复信息
+            "reply_to": reply_to_users,  # 回复的用户列表
+            
+            # 引用推文信息
+            "quoted": quoted_tweet_data,  # 被引用的推文信息（仅引用推文时有效）
+            
+            # 推文内容
             "time": tweet_time,
             "text": tweet_text,
             "images": image_urls
         }
         
-        # 输出提取成功的摘要信息
-        if is_retweet:
-            logger.debug(f"✓ 成功提取转推数据 - ID: {tweet_id}, 转推者: @{retweeter_handle_raw}, 原作者: @{user_handle_raw}")
-        else:
-            logger.debug(f"✓ 成功提取原创数据 - ID: {tweet_id}, 作者: @{user_handle_raw}")
-        
         return tweet_data
         
     except Exception as e:
-        logger.debug(f"提取推文数据失败: {e}")
-        logger.debug(traceback.format_exc())
+        logger.warning(f"提取推文数据失败: {e}")
         return None
 
 async def send_tweet_to_webhook(tweet_data):
-    """将推文数据发送到webhook，为转推提供专门格式
+    """将推文数据发送到webhook，为转推、引用和回复提供专门格式
     
     Args:
         tweet_data: 推文数据字典
@@ -476,12 +605,19 @@ async def send_tweet_to_webhook(tweet_data):
         # 构建消息内容
         message_parts = []
         
-        # 根据是否为转推，生成不同格式的消息
-        if tweet_data.get('is_retweet'):
-            # 这是转推
+        # 提取关键信息
+        is_retweet = tweet_data.get('is_retweet', False)
+        is_reply = tweet_data.get('is_reply', False)
+        is_quote = tweet_data.get('is_quote', False)
+        quoted_data = tweet_data.get('quoted')
+        reply_to_users = tweet_data.get('reply_to', [])
+        
+        # 根据推文类型生成不同格式的消息
+        if is_retweet:
+            # ========== 转推推文 ==========
             message_parts.append(f"🔄 用户转推提醒")
             retweeter = tweet_data['retweeter']
-            original_author = tweet_data['original_author']
+            author = tweet_data['author']
             
             # 突出转推者
             if retweeter['display_name']:
@@ -490,14 +626,40 @@ async def send_tweet_to_webhook(tweet_data):
                 message_parts.append(f"👤 转推者: @{retweeter['handle_raw']}")
             
             # 标明原作者
-            if original_author['display_name']:
-                message_parts.append(f"✍️ 原作者: {original_author['display_name']} (@{original_author['handle_raw']})")
+            if author['display_name']:
+                message_parts.append(f"✍️ 原作者: {author['display_name']} (@{author['handle_raw']})")
             else:
-                message_parts.append(f"✍️ 原作者: @{original_author['handle_raw']}")
+                message_parts.append(f"✍️ 原作者: @{author['handle_raw']}")
+        
+        elif is_quote:
+            # ========== 引用推文 ==========
+            message_parts.append(f"📖 新的引用推文")
+            author = tweet_data['author']
+            
+            if author['display_name']:
+                message_parts.append(f"👤 作者: {author['display_name']} (@{author['handle_raw']})")
+            else:
+                message_parts.append(f"👤 作者: @{author['handle_raw']}")
+        
+        elif is_reply:
+            # ========== 回复推文 ==========
+            message_parts.append(f"💬 新的回复推文")
+            author = tweet_data['author']
+            
+            if author['display_name']:
+                message_parts.append(f"👤 作者: {author['display_name']} (@{author['handle_raw']})")
+            else:
+                message_parts.append(f"👤 作者: @{author['handle_raw']}")
+            
+            # 标明回复的对象
+            if reply_to_users:
+                reply_to_str = ", ".join([f"@{u}" for u in reply_to_users])
+                message_parts.append(f"↩️ 回复给: {reply_to_str}")
+        
         else:
-            # 这是原创推文
+            # ========== 原创推文 ==========
             message_parts.append(f"🐦 新推文监听")
-            author = tweet_data['original_author']  # 对于原创，original_author就是作者
+            author = tweet_data['author']
             
             if author['display_name']:
                 message_parts.append(f"👤 作者: {author['display_name']} (@{author['handle_raw']})")
@@ -516,6 +678,29 @@ async def send_tweet_to_webhook(tweet_data):
             message_parts.append(tweet_data['text'])
             message_parts.append(f"")
         
+        # ==================== 展示被引用的推文内容 ====================
+        if quoted_data:
+            # 添加一个漂亮的分割线和标题
+            message_parts.append(" 引用的推文:\n ")
+            
+            # 格式化被引用推文的作者信息
+            quoted_author_info = f"@{quoted_data['author_handle']}"
+            if quoted_data['author_display_name']:
+                quoted_author_info = f"{quoted_data['author_display_name']} ({quoted_author_info})"
+            
+            message_parts.append(f"🗣️  {quoted_author_info} 说:")
+            
+            # 使用引用格式来展示原文
+            original_text = quoted_data.get('text', '[内容为空]')
+            quoted_text_formatted = "\n".join([f"> {line}" for line in original_text.split('\n')])
+            message_parts.append(quoted_text_formatted)
+            
+            # 如果有被引用推文的URL，也显示出来
+            if quoted_data.get('url'):
+                message_parts.append(f"> 🔗 {quoted_data['url']}")
+            
+        # ==================== 引用推文内容展示结束 ====================
+        
         # 推文链接
         if tweet_data['url']:
             message_parts.append(f"🔗 链接: {tweet_data['url']}")
@@ -526,42 +711,27 @@ async def send_tweet_to_webhook(tweet_data):
         
         # 发送文本消息
         message = "\n".join(message_parts)
-        
-        # 发送前先输出推文内容到日志
-        logger.info("=" * 60)
-        logger.info("准备发送推文到webhook:")
-        logger.info("-" * 60)
-        for line in message.split('\n'):
-            logger.info(line)
-        logger.info("=" * 60)
-        
+        logger.info(f"发送文本消息: {message}")
         await send_message_async(message, msg_type="text")
         
         # 发送图片（如果有）
         if tweet_data['images']:
-            logger.info(f"准备发送 {len(tweet_data['images'])} 张图片...")
             for idx, img_url in enumerate(tweet_data['images'], 1):
-                logger.info(f"下载图片 {idx}/{len(tweet_data['images'])}...")
-                
                 # 下载图片并转换为base64
                 proxy = CHROME_PROXY if CHROME_PROXY else None
                 image_base64 = download_image_to_base64(img_url, proxy)
                 
                 if image_base64:
-                    logger.info(f"发送图片 {idx}/{len(tweet_data['images'])}...")
                     success = await send_image_async(image_base64=image_base64)
-                    if success:
-                        logger.info(f"✓ 图片 {idx} 发送成功")
-                    else:
-                        logger.warning(f"图片 {idx} 发送失败")
+                    if not success:
+                        logger.warning(f"图片 {idx}/{len(tweet_data['images'])} 发送失败")
                     
                     # 图片发送间隔
                     if idx < len(tweet_data['images']):
                         await asyncio.sleep(1)
                 else:
-                    logger.warning(f"图片 {idx} 下载失败，跳过")
+                    logger.warning(f"图片 {idx}/{len(tweet_data['images'])} 下载失败")
         
-        logger.info(f"✓ 推文推送完成: {tweet_data['id']}")
         return True
         
     except Exception as e:
@@ -634,11 +804,19 @@ def scrape_list_tweets(driver, list_url, max_tweets=20):
                 processed_ids.add(tweet_data['id'])
                 tweets_data.append(tweet_data)
                 
-                # 根据是否为转推显示不同的日志
+                # 根据推文类型显示不同的日志
+                author = tweet_data['author']['handle_raw']
                 if tweet_data['is_retweet']:
-                    logger.info(f"✓ 提取转推: @{tweet_data['retweeter']['handle_raw']} RT @{tweet_data['original_author']['handle_raw']} - {tweet_data['id']}")
+                    logger.info(f"✓ 提取转推: @{tweet_data['retweeter']['handle_raw']} RT @{author} - {tweet_data['id']}")
+                elif tweet_data['is_quote']:
+                    quoted_author = tweet_data.get('quoted', {}).get('author_handle', 'unknown')
+                    logger.info(f"✓ 提取引用: @{author} 引用 @{quoted_author} - {tweet_data['id']}")
+                elif tweet_data['is_reply']:
+                    reply_to = tweet_data.get('reply_to', [])
+                    reply_str = ', '.join([f"@{u}" for u in reply_to]) if reply_to else '?'
+                    logger.info(f"✓ 提取回复: @{author} 回复 {reply_str} - {tweet_data['id']}")
                 else:
-                    logger.info(f"✓ 提取原创: @{tweet_data['original_author']['handle_raw']} - {tweet_data['id']}")
+                    logger.info(f"✓ 提取原创: @{author} - {tweet_data['id']}")
         
         # 如果需要更多推文，才进行滚动
         if len(tweets_data) < max_tweets:
@@ -667,11 +845,19 @@ def scrape_list_tweets(driver, list_url, max_tweets=20):
                         processed_ids.add(tweet_data['id'])
                         tweets_data.append(tweet_data)
                         
-                        # 根据是否为转推显示不同的日志
+                        # 根据推文类型显示不同的日志
+                        author = tweet_data['author']['handle_raw']
                         if tweet_data['is_retweet']:
-                            logger.info(f"✓ 提取转推: @{tweet_data['retweeter']['handle_raw']} RT @{tweet_data['original_author']['handle_raw']} - {tweet_data['id']}")
+                            logger.info(f"✓ 提取转推: @{tweet_data['retweeter']['handle_raw']} RT @{author} - {tweet_data['id']}")
+                        elif tweet_data['is_quote']:
+                            quoted_author = tweet_data.get('quoted', {}).get('author_handle', 'unknown')
+                            logger.info(f"✓ 提取引用: @{author} 引用 @{quoted_author} - {tweet_data['id']}")
+                        elif tweet_data['is_reply']:
+                            reply_to = tweet_data.get('reply_to', [])
+                            reply_str = ', '.join([f"@{u}" for u in reply_to]) if reply_to else '?'
+                            logger.info(f"✓ 提取回复: @{author} 回复 {reply_str} - {tweet_data['id']}")
                         else:
-                            logger.info(f"✓ 提取原创: @{tweet_data['original_author']['handle_raw']} - {tweet_data['id']}")
+                            logger.info(f"✓ 提取原创: @{author} - {tweet_data['id']}")
                 
                 # 检查是否有新推文
                 if len(tweets_data) == before_scroll_count:
@@ -737,21 +923,24 @@ async def monitor_list_once(driver, list_url, pushed_ids):
     logger.info(f"发现 {len(new_tweets)} 条新推文，准备推送...")
     
     # 按时间排序（旧的在前，新的在后）
-    # 这样推送时就是从旧到新的顺序
     new_tweets.sort(key=lambda x: x['time'] if x['time'] else '')
     
     # 推送新推文
     pushed_count = 0
     for idx, tweet in enumerate(new_tweets, 1):
-        logger.info("-" * 60)
-        logger.info(f"推送第 {idx}/{len(new_tweets)} 条新推文")
-        logger.info(f"ID: {tweet['id']}")
+        # 简化的日志输出
+        author = tweet['author']['handle_raw']
         if tweet['is_retweet']:
-            logger.info(f"转推者: @{tweet['retweeter']['handle_raw']}")
-            logger.info(f"原作者: @{tweet['original_author']['handle_raw']}")
+            logger.info(f"推送 {idx}/{len(new_tweets)}: 转推 @{tweet['retweeter']['handle_raw']} RT @{author}")
+        elif tweet['is_quote']:
+            quoted_author = tweet.get('quoted', {}).get('author_handle', 'unknown')
+            logger.info(f"推送 {idx}/{len(new_tweets)}: 引用 @{author} 引用 @{quoted_author}")
+        elif tweet['is_reply']:
+            reply_to = tweet.get('reply_to', [])
+            reply_str = ', '.join([f"@{u}" for u in reply_to]) if reply_to else '?'
+            logger.info(f"推送 {idx}/{len(new_tweets)}: 回复 @{author} 回复 {reply_str}")
         else:
-            logger.info(f"作者: @{tweet['original_author']['handle_raw']}")
-        logger.info(f"时间: {tweet['time']}")
+            logger.info(f"推送 {idx}/{len(new_tweets)}: 原创 @{author}")
         
         # 发送到webhook
         success = await send_tweet_to_webhook(tweet)
@@ -824,9 +1013,7 @@ async def monitor_lists_loop():
         
         while True:
             loop_count += 1
-            logger.info("#" * 60)
             logger.info(f"第 {loop_count} 次检查")
-            logger.info("#" * 60)
             
             # 定期检查登录状态
             if loop_count % login_check_interval_loops == 0:
@@ -861,7 +1048,6 @@ async def monitor_lists_loop():
             logger.info("=" * 60)
             
             # 等待下次检查
-            logger.debug(f"等待 {LIST_CHECK_INTERVAL} 秒...")
             time.sleep(LIST_CHECK_INTERVAL)
             
     except KeyboardInterrupt:

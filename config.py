@@ -43,11 +43,12 @@ MONITORED_USERS = [
     'cryptoDevinL',
     'brc20niubi',
     '0xcryptowizard',
-    '0xcryptocishanjia',
+    'cryptocishanjia',
     '0xsunnft',
     'cz_binance',
     'heyibinance',
-    'huigendeshen'
+    'huigendeshen',
+    'ouyoung11'
 ]
 
 # 是否启用用户白名单过滤（True=只推送白名单用户，False=推送所有用户）
