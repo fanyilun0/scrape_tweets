@@ -19,7 +19,7 @@ if CHROME_PROXY in ["", "None", "none", "null"]:
 
 # 推特列表监听配置
 LIST_CHECK_INTERVAL = int(os.getenv("LIST_CHECK_INTERVAL", "240"))  # 检查间隔（秒），默认240秒(4分钟)
-MAX_TWEETS_PER_CHECK = int(os.getenv("MAX_TWEETS_PER_CHECK", "8"))  # 每次检查最多获取的推文数量
+MAX_TWEETS_PER_CHECK = int(os.getenv("MAX_TWEETS_PER_CHECK", "20"))  # 每次检查最多获取的推文数量
 
 # 持久化配置
 USE_PERSISTENT_PROFILE = True

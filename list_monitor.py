@@ -429,37 +429,11 @@ def extract_tweet_data(tweet_article):
         # 注意：只有非转推的推文才可能是引用推文（转推和引用是互斥的）
         if not is_retweet:
             try:
-                # 查找嵌套的引用推文容器
-                # 引用推文通常在一个带有边框的卡片容器中
-                quoted_container = None
-                
-                # 方法1: 通过 data-testid='card.wrapper' 查找（最精确）
-                try:
-                    quoted_container = tweet_article.find_element(By.XPATH, ".//div[@data-testid='card.wrapper']")
-                    logger.debug("通过card.wrapper找到引用推文容器")
-                except:
-                    pass
-                
-                # 方法2: 查找嵌套的article元素（引用推文有时会用嵌套的article）
-                if not quoted_container:
-                    try:
-                        # 在当前推文内查找嵌套的article（但不是自己）
-                        nested_articles = tweet_article.find_elements(By.XPATH, ".//article[@data-testid='tweet']")
-                        if len(nested_articles) > 0:
-                            # 如果找到嵌套的article，说明是引用推文
-                            quoted_container = nested_articles[0]
-                            logger.debug("通过嵌套article找到引用推文容器")
-                    except:
-                        pass
-                
-                # 方法3: 通过特定的CSS类查找引用容器
-                if not quoted_container:
-                    try:
-                        # 引用推文容器通常有特定的样式
-                        quoted_container = tweet_article.find_element(By.XPATH, ".//div[contains(@class, 'r-1udh08x') and .//div[@data-testid='User-Name']]")
-                        logger.debug("通过CSS类找到引用推文容器")
-                    except:
-                        pass
+                # 基于HTML结构分析，使用一个非常稳定和精准的XPath来定位引用推文的容器
+                # 策略：寻找一个 role="link" 的div，且其内部必须包含一个 'User-Name' 的测试ID
+                # 这个方法可以精准地筛选出真正的引用推文，排除广告、链接卡片等干扰项
+                quoted_container_xpath = ".//div[@role='link' and .//div[@data-testid='User-Name']]"
+                quoted_container = tweet_article.find_element(By.XPATH, quoted_container_xpath)
                 
                 if quoted_container:
                     is_quote = True
@@ -469,45 +443,62 @@ def extract_tweet_data(tweet_article):
                     quoted_text = ""
                     quoted_tweet_url = ""
 
+                    # 提取作者信息
                     try:
-                        # 提取作者信息
                         quoted_user_div = quoted_container.find_element(By.XPATH, ".//div[@data-testid='User-Name']")
                         
-                        # 提取handle (@username)
-                        handle_links = quoted_user_div.find_elements(By.XPATH, ".//a[contains(@href, '/')]")
-                        for link in handle_links:
-                            href = link.get_attribute('href')
-                            if href and '/status/' not in href and '/photo/' not in href:
-                                quoted_author_handle = href.split('/')[-1].split('?')[0].split('#')[0]
-                                if quoted_author_handle:
+                        # 提取handle (@username) - 从链接中提取最可靠
+                        try:
+                            handle_links = quoted_user_div.find_elements(By.XPATH, ".//a[contains(@href, '/')]")
+                            for link in handle_links:
+                                href = link.get_attribute('href')
+                                if href and '/status/' not in href and '/photo/' not in href:
+                                    # 清理URL参数，提取纯用户名
+                                    quoted_author_handle = href.split('/')[-1].split('?')[0].split('#')[0]
+                                    if quoted_author_handle:
+                                        break
+                        except NoSuchElementException:
+                            pass
+                        
+                        # 如果从链接提取失败，尝试从文本中解析 @username
+                        if not quoted_author_handle:
+                            spans = quoted_user_div.find_elements(By.TAG_NAME, "span")
+                            for span in spans:
+                                text = span.text.strip()
+                                if text.startswith('@'):
+                                    quoted_author_handle = text[1:]  # 移除 @ 符号
                                     break
                         
                         # 提取显示名称
                         spans = quoted_user_div.find_elements(By.TAG_NAME, "span")
                         for span in spans:
                             text = span.text.strip()
+                            # 第一个不以@开头且不为空的span通常就是显示名称
                             if text and not text.startswith('@') and len(text) > 0:
                                 quoted_author_name = text
                                 break
                     except Exception as e:
                         logger.debug(f"提取被引用推文的作者失败: {e}")
 
+                    # 提取正文（可能为空，因为有些引用推文只有图片）
                     try:
-                        # 提取正文
                         quoted_text_div = quoted_container.find_element(By.XPATH, ".//div[@data-testid='tweetText']")
                         quoted_text = quoted_text_div.text
+                    except NoSuchElementException:
+                        # 有些引用推文没有文字内容，这是正常的
+                        logger.debug("被引用推文没有文本内容")
                     except Exception as e:
                         logger.debug(f"提取被引用推文的正文失败: {e}")
                     
+                    # 提取被引用推文的URL
                     try:
-                        # 提取被引用推文的URL
                         quoted_links = quoted_container.find_elements(By.XPATH, ".//a[contains(@href, '/status/')]")
                         for link in quoted_links:
                             href = link.get_attribute('href')
                             if href and '/status/' in href and '/analytics' not in href:
                                 quoted_tweet_url = href.split('?')[0]
                                 break
-                    except:
+                    except Exception:
                         pass
                     
                     # 如果成功提取到信息，就组装起来
@@ -518,9 +509,13 @@ def extract_tweet_data(tweet_article):
                             "text": quoted_text,
                             "url": quoted_tweet_url
                         }
-                        logger.debug(f"检测到引用推文: @{quoted_author_handle}")
+                        logger.debug(f"检测到引用推文: @{quoted_author_handle} - {quoted_text[:30] if quoted_text else '无文本'}...")
+                    
+            except NoSuchElementException:
+                # 没找到容器，说明这不是一条引用推文，属于正常情况
+                pass
             except Exception as e:
-                logger.debug(f"尝试提取引用推文时发生错误: {e}")
+                logger.debug(f"尝试提取引用推文时发生未知错误: {e}")
         # ==================== 提取引用推文结束 ====================
         
         # 提取推文时间
@@ -809,7 +804,8 @@ def scrape_list_tweets(driver, list_url, max_tweets=20):
                 if tweet_data['is_retweet']:
                     logger.info(f"✓ 提取转推: @{tweet_data['retweeter']['handle_raw']} RT @{author} - {tweet_data['id']}")
                 elif tweet_data['is_quote']:
-                    quoted_author = tweet_data.get('quoted', {}).get('author_handle', 'unknown')
+                    quoted_data = tweet_data.get('quoted')
+                    quoted_author = quoted_data.get('author_handle', 'unknown') if quoted_data else 'unknown'
                     logger.info(f"✓ 提取引用: @{author} 引用 @{quoted_author} - {tweet_data['id']}")
                 elif tweet_data['is_reply']:
                     reply_to = tweet_data.get('reply_to', [])
@@ -850,7 +846,8 @@ def scrape_list_tweets(driver, list_url, max_tweets=20):
                         if tweet_data['is_retweet']:
                             logger.info(f"✓ 提取转推: @{tweet_data['retweeter']['handle_raw']} RT @{author} - {tweet_data['id']}")
                         elif tweet_data['is_quote']:
-                            quoted_author = tweet_data.get('quoted', {}).get('author_handle', 'unknown')
+                            quoted_data = tweet_data.get('quoted')
+                            quoted_author = quoted_data.get('author_handle', 'unknown') if quoted_data else 'unknown'
                             logger.info(f"✓ 提取引用: @{author} 引用 @{quoted_author} - {tweet_data['id']}")
                         elif tweet_data['is_reply']:
                             reply_to = tweet_data.get('reply_to', [])
@@ -933,7 +930,8 @@ async def monitor_list_once(driver, list_url, pushed_ids):
         if tweet['is_retweet']:
             logger.info(f"推送 {idx}/{len(new_tweets)}: 转推 @{tweet['retweeter']['handle_raw']} RT @{author}")
         elif tweet['is_quote']:
-            quoted_author = tweet.get('quoted', {}).get('author_handle', 'unknown')
+            quoted_data = tweet.get('quoted')
+            quoted_author = quoted_data.get('author_handle', 'unknown') if quoted_data else 'unknown'
             logger.info(f"推送 {idx}/{len(new_tweets)}: 引用 @{author} 引用 @{quoted_author}")
         elif tweet['is_reply']:
             reply_to = tweet.get('reply_to', [])
