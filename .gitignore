@@ -4,6 +4,12 @@ chrome_profile/
 # 图片目录（文件太大，不建议提交）
 tweets_images_*/
 
+# 环境变量文件（包含敏感信息）
+.env
+
+# 推送记录文件（可选是否提交）
+pushed_tweet_ids.json
+
 # Python 缓存
 __pycache__/
 *.py[cod]
