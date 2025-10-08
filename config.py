@@ -18,7 +18,7 @@ if CHROME_PROXY in ["", "None", "none", "null"]:
     CHROME_PROXY = None
 
 # 推特列表监听配置
-LIST_CHECK_INTERVAL = int(os.getenv("LIST_CHECK_INTERVAL", "300"))  # 检查间隔（秒），默认5分钟
+LIST_CHECK_INTERVAL = int(os.getenv("LIST_CHECK_INTERVAL", "240"))  # 检查间隔（秒），默认240秒(4分钟)
 MAX_TWEETS_PER_CHECK = int(os.getenv("MAX_TWEETS_PER_CHECK", "8"))  # 每次检查最多获取的推文数量
 
 # 持久化配置
@@ -27,4 +27,28 @@ PROFILE_DIR = "./chrome_profile"
 
 # 已推送推文ID记录文件
 PUSHED_IDS_FILE = "pushed_tweet_ids.json"
+
+# 要监听的推特列表URL（可以配置多个）
+TWITTER_LISTS = [
+    "https://x.com/i/lists/1876489130466816018"  # 测试列表
+]
+
+# 要监听的用户白名单（只推送这些用户的推文或转推）
+# 格式：用户名（不含@符号），例如 "elonmusk", "0xSunNFT"
+# 如果列表为空，则推送所有用户的推文
+MONITORED_USERS = [
+    'pepeboost888',
+    'Arya_web3',    
+    'web3feng',
+    'cryptoDevinL',
+    'brc20niubi',
+    '0xcryptowizard',
+    '0xcryptocishanjia',
+    '0xsunnft',
+    'cz_binance',
+    'heyibinance',
+]
+
+# 是否启用用户白名单过滤（True=只推送白名单用户，False=推送所有用户）
+ENABLE_USER_FILTER = True
 

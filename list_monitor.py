@@ -25,36 +25,14 @@ from selenium.common.exceptions import NoSuchElementException, TimeoutException
 try:
     from config import (
         CHROME_PROXY, USE_PERSISTENT_PROFILE, PROFILE_DIR,
-        PUSHED_IDS_FILE, LIST_CHECK_INTERVAL, MAX_TWEETS_PER_CHECK
+        PUSHED_IDS_FILE, LIST_CHECK_INTERVAL, MAX_TWEETS_PER_CHECK,
+        TWITTER_LISTS, MONITORED_USERS, ENABLE_USER_FILTER
     )
     from webhook import send_message_async, send_image_async
 except ImportError as e:
     print(f"❌ 导入配置失败: {e}")
     print("请确保 config.py 和 webhook.py 文件存在")
     exit(1)
-
-# ==================== 配置区域 ====================
-# 要监听的推特列表URL（可以配置多个）
-TWITTER_LISTS = [
-    "https://x.com/i/lists/1876489130466816018"  # 测试列表
-]
-
-# 要监听的用户白名单（只推送这些用户的推文）
-# 格式：用户名（不含@符号），例如 "elonmusk", "0xSunNFT"
-# 如果列表为空，则推送所有用户的推文
-MONITORED_USERS = [
-    'pepeboost888',
-    'Arya_web3',    
-    'web3feng',
-    'cryptoDevinL',
-    'brc20niubi',
-    '0xcryptowizard',
-    '0xcryptocishanjia',
-    '0xsunnft',
-]
-
-# 是否启用用户白名单过滤（True=只推送白名单用户，False=推送所有用户）
-ENABLE_USER_FILTER = True
 
 # ==================== 辅助函数 ====================
 def load_pushed_ids():
@@ -138,15 +116,71 @@ def download_image_to_base64(url, proxy=None):
         return None
 
 def extract_tweet_data(tweet_article):
-    """从推文元素中提取数据
+    """从推文元素中提取数据，能够区分原创和转推
     
     Args:
         tweet_article: Selenium WebElement，推文的article元素
         
     Returns:
-        dict: 包含推文数据的字典，失败返回None
+        dict: 包含推文数据的字典，如果不符合白名单要求则返回None
     """
     try:
+        is_retweet = False
+        retweeter_handle_raw = ""
+        retweeter_display_name = ""
+        
+        # 检测是否为转推
+        try:
+            # 转推的上下文通常在这个testid的div里
+            social_context = tweet_article.find_element(By.XPATH, ".//div[@data-testid='socialContext']")
+            context_text = social_context.text
+            if "Retweeted" in context_text or "转推了" in context_text or "已转推" in context_text:
+                is_retweet = True
+                # 提取转推者的用户名
+                try:
+                    retweeter_link = social_context.find_element(By.TAG_NAME, "a")
+                    retweeter_handle_raw = retweeter_link.get_attribute('href').split('/')[-1].split('?')[0]
+                    # 清理显示名称，移除"Retweeted"等文字
+                    retweeter_display_name = context_text.replace("Retweeted", "").replace("转推了", "").replace("已转推", "").strip()
+                except:
+                    pass
+        except NoSuchElementException:
+            # 找不到socialContext，说明是原创推文
+            is_retweet = False
+        
+        # 提取用户名和显示名称（这是原作者的信息）
+        user_handle_raw = ""
+        user_display_name = ""
+        try:
+            user_name_div = tweet_article.find_element(By.XPATH, ".//div[@data-testid='User-Name']")
+            # 提取显示名称
+            try:
+                display_name_element = user_name_div.find_element(By.XPATH, ".//span[contains(@class, 'css-1jxf684')]")
+                user_display_name = display_name_element.text
+            except:
+                pass
+            
+            # 提取handle (@username)
+            try:
+                handle_element = user_name_div.find_element(By.XPATH, ".//a[contains(@href, '/')]")
+                user_handle_raw = handle_element.get_attribute('href').split('/')[-1].split('?')[0]
+            except:
+                pass
+        except NoSuchElementException:
+            pass
+        
+        # 白名单过滤逻辑
+        # 如果是转推，检查转推者是否在白名单
+        if is_retweet:
+            if not is_user_in_whitelist(retweeter_handle_raw):
+                return None  # 转推者不在白名单，跳过
+        # 如果是原创，检查作者是否在白名单
+        else:
+            if not is_user_in_whitelist(user_handle_raw):
+                return None  # 作者不在白名单，跳过
+        
+        # 只有通过白名单检查的推文才会继续提取其他信息
+        
         # 提取推文ID和URL
         tweet_link_elements = tweet_article.find_elements(By.XPATH, ".//a[contains(@href, '/status/')]")
         tweet_url = None
@@ -168,29 +202,6 @@ def extract_tweet_data(tweet_article):
         try:
             tweet_text_element = tweet_article.find_element(By.XPATH, ".//div[@data-testid='tweetText']")
             tweet_text = tweet_text_element.text
-        except NoSuchElementException:
-            pass
-        
-        # 提取用户名和显示名称
-        user_handle = ""
-        user_handle_raw = ""  # 不带@的用户名
-        user_display_name = ""
-        try:
-            user_name_div = tweet_article.find_element(By.XPATH, ".//div[@data-testid='User-Name']")
-            # 提取显示名称
-            try:
-                display_name_element = user_name_div.find_element(By.XPATH, ".//span[contains(@class, 'css-1jxf684')]")
-                user_display_name = display_name_element.text
-            except:
-                pass
-            
-            # 提取handle (@username)
-            try:
-                handle_element = user_name_div.find_element(By.XPATH, ".//a[contains(@href, '/')]")
-                user_handle_raw = handle_element.get_attribute('href').split('/')[-1].split('?')[0]
-                user_handle = f"@{user_handle_raw}"
-            except:
-                pass
         except NoSuchElementException:
             pass
         
@@ -231,9 +242,15 @@ def extract_tweet_data(tweet_article):
         return {
             "id": tweet_id,
             "url": tweet_url,
-            "handle": user_handle,
-            "handle_raw": user_handle_raw,  # 不带@的用户名，用于过滤
-            "display_name": user_display_name,
+            "is_retweet": is_retweet,
+            "retweeter": {  # 转推者信息
+                "handle_raw": retweeter_handle_raw,
+                "display_name": retweeter_display_name
+            },
+            "original_author": {  # 原作者信息
+                "handle_raw": user_handle_raw,
+                "display_name": user_display_name
+            },
             "time": tweet_time,
             "text": tweet_text,
             "images": image_urls
@@ -243,7 +260,7 @@ def extract_tweet_data(tweet_article):
         return None
 
 async def send_tweet_to_webhook(tweet_data):
-    """将推文数据发送到webhook
+    """将推文数据发送到webhook，为转推提供专门格式
     
     Args:
         tweet_data: 推文数据字典
@@ -251,12 +268,34 @@ async def send_tweet_to_webhook(tweet_data):
     try:
         # 构建消息内容
         message_parts = []
-        message_parts.append(f"🐦 新推文监听")
-        # 用户信息
-        if tweet_data['display_name']:
-            message_parts.append(f"👤 作者: {tweet_data['display_name']} ({tweet_data['handle']})")
+        
+        # 根据是否为转推，生成不同格式的消息
+        if tweet_data.get('is_retweet'):
+            # 这是转推
+            message_parts.append(f"🔄 用户转推提醒")
+            retweeter = tweet_data['retweeter']
+            original_author = tweet_data['original_author']
+            
+            # 突出转推者
+            if retweeter['display_name']:
+                message_parts.append(f"👤 转推者: {retweeter['display_name']} (@{retweeter['handle_raw']})")
+            else:
+                message_parts.append(f"👤 转推者: @{retweeter['handle_raw']}")
+            
+            # 标明原作者
+            if original_author['display_name']:
+                message_parts.append(f"✍️ 原作者: {original_author['display_name']} (@{original_author['handle_raw']})")
+            else:
+                message_parts.append(f"✍️ 原作者: @{original_author['handle_raw']}")
         else:
-            message_parts.append(f"👤 作者: {tweet_data['handle']}")
+            # 这是原创推文
+            message_parts.append(f"🐦 新推文监听")
+            author = tweet_data['original_author']  # 对于原创，original_author就是作者
+            
+            if author['display_name']:
+                message_parts.append(f"👤 作者: {author['display_name']} (@{author['handle_raw']})")
+            else:
+                message_parts.append(f"👤 作者: @{author['handle_raw']}")
         
         # 时间
         if tweet_data['time']:
@@ -269,6 +308,7 @@ async def send_tweet_to_webhook(tweet_data):
             message_parts.append(f"📝 内容:")
             message_parts.append(tweet_data['text'])
             message_parts.append(f"")
+        
         # 推文链接
         if tweet_data['url']:
             message_parts.append(f"🔗 链接: {tweet_data['url']}")
@@ -279,7 +319,7 @@ async def send_tweet_to_webhook(tweet_data):
         
         # 发送文本消息
         message = "\n".join(message_parts)
-        print(f"  发送推文通知... {message}")
+        print(f"  发送推文通知...")
         await send_message_async(message, msg_type="text")
         
         # 发送图片（如果有）
@@ -370,16 +410,18 @@ def scrape_list_tweets(driver, list_url, max_tweets=20):
             if len(tweets_data) >= max_tweets:
                 break
             
+            # extract_tweet_data 现在会在内部进行白名单过滤，返回None表示不符合要求
             tweet_data = extract_tweet_data(article)
             
             if tweet_data and tweet_data['id'] not in processed_ids:
-                # 检查用户是否在白名单中
-                if is_user_in_whitelist(tweet_data['handle_raw']):
-                    processed_ids.add(tweet_data['id'])
-                    tweets_data.append(tweet_data)
-                    print(f"  ✓ 提取推文: {tweet_data['handle']} - {tweet_data['id']}")
+                processed_ids.add(tweet_data['id'])
+                tweets_data.append(tweet_data)
+                
+                # 根据是否为转推显示不同的日志
+                if tweet_data['is_retweet']:
+                    print(f"  ✓ 提取转推: @{tweet_data['retweeter']['handle_raw']} RT @{tweet_data['original_author']['handle_raw']} - {tweet_data['id']}")
                 else:
-                    print(f"  ⊘ 跳过推文（用户不在白名单）: {tweet_data['handle']}")
+                    print(f"  ✓ 提取原创: @{tweet_data['original_author']['handle_raw']} - {tweet_data['id']}")
         
         # 如果需要更多推文，才进行滚动
         if len(tweets_data) < max_tweets:
@@ -401,18 +443,18 @@ def scrape_list_tweets(driver, list_url, max_tweets=20):
                     if len(tweets_data) >= max_tweets:
                         break
                     
+                    # extract_tweet_data 现在会在内部进行白名单过滤
                     tweet_data = extract_tweet_data(article)
                     
                     if tweet_data and tweet_data['id'] not in processed_ids:
-                        # 检查用户是否在白名单中
-                        if is_user_in_whitelist(tweet_data['handle_raw']):
-                            processed_ids.add(tweet_data['id'])
-                            tweets_data.append(tweet_data)
-                            print(f"  ✓ 提取推文: {tweet_data['handle']} - {tweet_data['id']}")
+                        processed_ids.add(tweet_data['id'])
+                        tweets_data.append(tweet_data)
+                        
+                        # 根据是否为转推显示不同的日志
+                        if tweet_data['is_retweet']:
+                            print(f"  ✓ 提取转推: @{tweet_data['retweeter']['handle_raw']} RT @{tweet_data['original_author']['handle_raw']} - {tweet_data['id']}")
                         else:
-                            # 标记为已处理，但不添加到结果中
-                            processed_ids.add(tweet_data['id'])
-                            print(f"  ⊘ 跳过推文（用户不在白名单）: {tweet_data['handle']}")
+                            print(f"  ✓ 提取原创: @{tweet_data['original_author']['handle_raw']} - {tweet_data['id']}")
                 
                 # 检查是否有新推文
                 if len(tweets_data) == before_scroll_count:
@@ -481,7 +523,11 @@ async def monitor_list_once(driver, list_url, pushed_ids):
     for idx, tweet in enumerate(new_tweets, 1):
         print(f"\n--- 推送第 {idx}/{len(new_tweets)} 条新推文 ---")
         print(f"ID: {tweet['id']}")
-        print(f"作者: {tweet['handle']}")
+        if tweet['is_retweet']:
+            print(f"转推者: @{tweet['retweeter']['handle_raw']}")
+            print(f"原作者: @{tweet['original_author']['handle_raw']}")
+        else:
+            print(f"作者: @{tweet['original_author']['handle_raw']}")
         print(f"时间: {tweet['time']}")
         
         # 发送到webhook
@@ -550,7 +596,7 @@ async def monitor_lists_loop():
         
         loop_count = 0
         # 增加一个登录检查的计数器
-        login_check_interval_loops = 10  # 每10次循环检查一次登录
+        login_check_interval_loops = 100  # 每10次循环检查一次登录
         
         while True:
             loop_count += 1
