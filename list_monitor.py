@@ -39,6 +39,23 @@ TWITTER_LISTS = [
     "https://x.com/i/lists/1876489130466816018"  # 测试列表
 ]
 
+# 要监听的用户白名单（只推送这些用户的推文）
+# 格式：用户名（不含@符号），例如 "elonmusk", "0xSunNFT"
+# 如果列表为空，则推送所有用户的推文
+MONITORED_USERS = [
+    'pepeboost888',
+    'Arya_web3',    
+    'web3feng',
+    'cryptoDevinL',
+    'brc20niubi',
+    '0xcryptowizard',
+    '0xcryptocishanjia',
+    '0xsunnft',
+]
+
+# 是否启用用户白名单过滤（True=只推送白名单用户，False=推送所有用户）
+ENABLE_USER_FILTER = True
+
 # ==================== 辅助函数 ====================
 def load_pushed_ids():
     """加载已推送的推文ID"""
@@ -137,9 +154,10 @@ def extract_tweet_data(tweet_article):
         
         for link in tweet_link_elements:
             href = link.get_attribute('href')
-            if '/status/' in href:
+            if '/status/' in href and '/analytics' not in href:  # 排除analytics链接
                 tweet_url = href
-                tweet_id = href.split('/status/')[-1].split('?')[0]
+                # 清理URL，移除额外的路径
+                tweet_id = href.split('/status/')[-1].split('?')[0].split('/')[0]
                 break
         
         if not tweet_id:
@@ -155,6 +173,7 @@ def extract_tweet_data(tweet_article):
         
         # 提取用户名和显示名称
         user_handle = ""
+        user_handle_raw = ""  # 不带@的用户名
         user_display_name = ""
         try:
             user_name_div = tweet_article.find_element(By.XPATH, ".//div[@data-testid='User-Name']")
@@ -168,8 +187,8 @@ def extract_tweet_data(tweet_article):
             # 提取handle (@username)
             try:
                 handle_element = user_name_div.find_element(By.XPATH, ".//a[contains(@href, '/')]")
-                user_handle = handle_element.get_attribute('href').split('/')[-1]
-                user_handle = f"@{user_handle}"
+                user_handle_raw = handle_element.get_attribute('href').split('/')[-1].split('?')[0]
+                user_handle = f"@{user_handle_raw}"
             except:
                 pass
         except NoSuchElementException:
@@ -213,6 +232,7 @@ def extract_tweet_data(tweet_article):
             "id": tweet_id,
             "url": tweet_url,
             "handle": user_handle,
+            "handle_raw": user_handle_raw,  # 不带@的用户名，用于过滤
             "display_name": user_display_name,
             "time": tweet_time,
             "text": tweet_text,
@@ -262,7 +282,7 @@ async def send_tweet_to_webhook(tweet_data):
         
         # 发送文本消息
         message = "\n".join(message_parts)
-        print(f"  发送推文通知...")
+        print(f"  发送推文通知... {message}")
         await send_message_async(message, msg_type="text")
         
         # 发送图片（如果有）
@@ -296,6 +316,26 @@ async def send_tweet_to_webhook(tweet_data):
         print(f"× 推送推文失败: {e}")
         return False
 
+def is_user_in_whitelist(user_handle_raw):
+    """检查用户是否在白名单中
+    
+    Args:
+        user_handle_raw: 用户名（不含@）
+        
+    Returns:
+        bool: 如果用户在白名单或未启用过滤，返回True
+    """
+    # 如果未启用用户过滤，返回True（允许所有用户）
+    if not ENABLE_USER_FILTER:
+        return True
+    
+    # 如果白名单为空，返回True（允许所有用户）
+    if not MONITORED_USERS:
+        return True
+    
+    # 检查用户是否在白名单中（不区分大小写）
+    return user_handle_raw.lower() in [u.lower() for u in MONITORED_USERS]
+
 def scrape_list_tweets(driver, list_url, max_tweets=20):
     """抓取推特列表中的推文
     
@@ -321,38 +361,76 @@ def scrape_list_tweets(driver, list_url, max_tweets=20):
         
         tweets_data = []
         processed_ids = set()
-        scroll_attempts = 0
-        max_scroll_attempts = 10
+        no_new_tweets_count = 0  # 连续未发现新推文的次数
+        max_no_new_tweets = 3     # 最多允许3次未发现新推文
         
-        while len(tweets_data) < max_tweets and scroll_attempts < max_scroll_attempts:
-            # 查找所有推文元素
-            tweet_articles = driver.find_elements(By.XPATH, "//article[@data-testid='tweet']")
-            
-            print(f"  当前页面找到 {len(tweet_articles)} 条推文")
-            
-            # 提取推文数据
-            for article in tweet_articles:
-                if len(tweets_data) >= max_tweets:
-                    break
-                
-                tweet_data = extract_tweet_data(article)
-                
-                if tweet_data and tweet_data['id'] not in processed_ids:
-                    processed_ids.add(tweet_data['id'])
-                    tweets_data.append(tweet_data)
-                    print(f"  ✓ 提取推文: {tweet_data['handle']} - {tweet_data['id']}")
-            
-            # 如果已经获取足够的推文，退出循环
+        # 先获取当前可见的推文（不滚动）
+        print("  抓取当前可见推文...")
+        tweet_articles = driver.find_elements(By.XPATH, "//article[@data-testid='tweet']")
+        print(f"  找到 {len(tweet_articles)} 条可见推文")
+        
+        for article in tweet_articles:
             if len(tweets_data) >= max_tweets:
                 break
             
-            # 滚动页面加载更多推文
-            print(f"  滚动加载更多推文... (已获取 {len(tweets_data)}/{max_tweets})")
-            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(3)
-            scroll_attempts += 1
+            tweet_data = extract_tweet_data(article)
+            
+            if tweet_data and tweet_data['id'] not in processed_ids:
+                # 检查用户是否在白名单中
+                if is_user_in_whitelist(tweet_data['handle_raw']):
+                    processed_ids.add(tweet_data['id'])
+                    tweets_data.append(tweet_data)
+                    print(f"  ✓ 提取推文: {tweet_data['handle']} - {tweet_data['id']}")
+                else:
+                    print(f"  ⊘ 跳过推文（用户不在白名单）: {tweet_data['handle']}")
+        
+        # 如果需要更多推文，才进行滚动
+        if len(tweets_data) < max_tweets:
+            print(f"  当前获取 {len(tweets_data)} 条，需要更多推文，开始滚动...")
+            
+            while len(tweets_data) < max_tweets and no_new_tweets_count < max_no_new_tweets:
+                # 记录滚动前的推文数量
+                before_scroll_count = len(tweets_data)
+                
+                # 滚动页面
+                driver.execute_script("window.scrollBy(0, 800);")  # 每次只滚动800像素，避免跳过内容
+                time.sleep(2)
+                
+                # 获取新出现的推文
+                tweet_articles = driver.find_elements(By.XPATH, "//article[@data-testid='tweet']")
+                
+                # 提取新推文
+                for article in tweet_articles:
+                    if len(tweets_data) >= max_tweets:
+                        break
+                    
+                    tweet_data = extract_tweet_data(article)
+                    
+                    if tweet_data and tweet_data['id'] not in processed_ids:
+                        # 检查用户是否在白名单中
+                        if is_user_in_whitelist(tweet_data['handle_raw']):
+                            processed_ids.add(tweet_data['id'])
+                            tweets_data.append(tweet_data)
+                            print(f"  ✓ 提取推文: {tweet_data['handle']} - {tweet_data['id']}")
+                        else:
+                            # 标记为已处理，但不添加到结果中
+                            processed_ids.add(tweet_data['id'])
+                            print(f"  ⊘ 跳过推文（用户不在白名单）: {tweet_data['handle']}")
+                
+                # 检查是否有新推文
+                if len(tweets_data) == before_scroll_count:
+                    no_new_tweets_count += 1
+                    print(f"  ⚠ 未发现新的符合条件的推文 ({no_new_tweets_count}/{max_no_new_tweets})")
+                else:
+                    no_new_tweets_count = 0  # 重置计数器
+                    print(f"  已获取 {len(tweets_data)}/{max_tweets} 条推文")
         
         print(f"✓ 共提取 {len(tweets_data)} 条推文")
+        
+        # 如果启用了用户过滤，显示统计信息
+        if ENABLE_USER_FILTER and MONITORED_USERS:
+            print(f"  已启用用户白名单过滤，监听 {len(MONITORED_USERS)} 个用户")
+        
         return tweets_data
         
     except Exception as e:
