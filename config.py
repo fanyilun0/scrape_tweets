@@ -7,15 +7,16 @@ load_dotenv()
 # Webhook配置（从环境变量读取）
 WEBHOOK_URL = os.getenv("WEBHOOK_URL", "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=YOUR_WEBHOOK_KEY")
 
-# 代理配置（从环境变量读取）
-USE_PROXY = os.getenv("USE_PROXY", "true").lower() == "true"
-PROXY_URL = os.getenv("PROXY_URL", "http://127.0.0.1:7890")
+# Webhook代理配置（独立控制）
+USE_WEBHOOK_PROXY = os.getenv("USE_WEBHOOK_PROXY", "false").lower() == "true"
+WEBHOOK_PROXY_URL = os.getenv("WEBHOOK_PROXY_URL", "http://127.0.0.1:7890")
 
-# Chrome代理配置（用于Selenium）
-CHROME_PROXY = os.getenv("CHROME_PROXY", "http://127.0.0.1:7890")
-# 如果环境变量设置为空字符串或 "None"，则设置为 None
-if CHROME_PROXY in ["", "None", "none", "null"]:
-    CHROME_PROXY = None
+# Chrome代理配置（独立控制，用于Selenium）
+USE_CHROME_PROXY = os.getenv("USE_CHROME_PROXY", "false").lower() == "true"
+CHROME_PROXY_URL = os.getenv("CHROME_PROXY_URL", "http://127.0.0.1:7890")
+
+# 根据开关决定实际使用的代理
+CHROME_PROXY = CHROME_PROXY_URL if USE_CHROME_PROXY else None
 
 # 推特列表监听配置
 LIST_CHECK_INTERVAL = int(os.getenv("LIST_CHECK_INTERVAL", "240"))  # 检查间隔（秒），默认240秒(4分钟)

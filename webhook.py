@@ -3,7 +3,7 @@ import asyncio
 import base64
 import os
 import hashlib
-from config import WEBHOOK_URL, PROXY_URL, USE_PROXY
+from config import WEBHOOK_URL, WEBHOOK_PROXY_URL, USE_WEBHOOK_PROXY
 
 async def _send_single_message(session, content, headers, proxy, msg_type="text"):
     """发送单条消息
@@ -180,7 +180,7 @@ async def send_message_async(message_content, msg_type="text"):
         print(f"消息将被分成 {total_segments} 段发送")
     
     headers = {'Content-Type': 'application/json'}
-    proxy = PROXY_URL if USE_PROXY else None
+    proxy = WEBHOOK_PROXY_URL if USE_WEBHOOK_PROXY else None
     
     async with aiohttp.ClientSession() as session:
         for i, segment in enumerate(segments):
@@ -211,7 +211,7 @@ async def send_image_async(image_path=None, image_base64=None):
         bool: 是否发送成功
     """
     headers = {'Content-Type': 'application/json'}
-    proxy = PROXY_URL if USE_PROXY else None
+    proxy = WEBHOOK_PROXY_URL if USE_WEBHOOK_PROXY else None
     
     async with aiohttp.ClientSession() as session:
         success = await _send_image(session, image_path, image_base64, headers, proxy)
