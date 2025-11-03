@@ -102,16 +102,12 @@ Bot不是神兵利器，它并不能保证你赚到钱，而是类似于杠杆�
 
 **内容**:
 
-我是如何达成单狗70E收益，并实现与项目双赢：我印了2000张 
-
-@DogeClub_NFT
+我是如何达成单狗70E收益，并实现与项目双赢：我印了2000张@DogeClub_NFT
 
  ，以0.047均价售出1258张，仍持有742张
 
 
-How I got 70ETH profit with a single degen play, and achieved win-win between project and myself: I minted 2k 
-
-@DogeClub_NFT
+How I got 70ETH profit with a single degen play, and achieved win-win between project and myself: I minted 2k@DogeClub_NFT
 
  , sold 1258 at 0.047 avg and still hold 742
 
@@ -168,15 +164,11 @@ How I got 70ETH profit with a single degen play, and achieved win-win between pr
 
 **内容**:
 
-写完上次的攻略后，我也把重心放在了土狗币上，近一周来钱包收益超过100ETH（数据来自 
-
-@zerion
+写完上次的攻略后，我也把重心放在了土狗币上，近一周来钱包收益超过100ETH（数据来自@zerion
 
  ，不完全准确），这个帖子就聊聊我印象比较深的币以及我的操作思路
 
-目前仍持有较多的是 $TURBO , $FOUR , $Cheems 和 $BOB ，希望里面能有1~2个上 
-
-@okx
+目前仍持有较多的是 $TURBO , $FOUR , $Cheems 和 $BOB ，希望里面能有1~2个上@okx
 
 **图片** (5 张):
 
@@ -210,9 +202,7 @@ How I got 70ETH profit with a single degen play, and achieved win-win between pr
 
 **内容**:
 
-Idk what happened but I just aped 1ETH at 
-
-@Pauly0x
+Idk what happened but I just aped 1ETH at@Pauly0x
 
  's p0nd site then swap out with 44.5ETH life is crazy man
 
@@ -236,9 +226,7 @@ Idk what happened but I just aped 1ETH at
 
 **内容**:
 
-吸引了几乎所有链上玩家目光的 
-
-@BananaGunBot
+吸引了几乎所有链上玩家目光的@BananaGunBot
 
  代币 $BANANA 如期开盘，目前FDV70M，对应MC为17.5M，表现比较符合我的预期，我从获知它们要发币后开始全程跟进，拿到2个白单，场外收了3个白单，开盘限购阶段买入了50个号，获利50E左右（收益图未计算部分成本），每一阶段复盘如下：
 
@@ -306,9 +294,7 @@ Idk what happened but I just aped 1ETH at
 
 **内容**:
 
-节点猴 
-
-@nodemonkes
+节点猴@nodemonkes
 
  的地板来到了0.29BTC，距离荷兰拍的结标价0.03BTC接近10倍，在0.6~1.2BTC区域也有密集的稀有成交，不到一周时间在Magic Eden单平台的交易量就达到了859BTC，折合人民币接近2.6亿，理论上这是一个可以达成单狗A9的项目，然而很多人却因为Mint前的FUD从头到尾踏空了，这也再次印证了我之前的想法，在币圈往往分歧带来大机会。
 
@@ -421,9 +407,7 @@ Digi突袭Freemint，一周后地板2E，二十天后地板10E，两个月后地
 
 借此对这个月群内推荐项目和自己的操作做一个分享与总结，以下大部分操作都由0xSun.eth这个地址完成，大部分项目的入场时间都是最早一批：
 
-1、Moby 
-
-@MobyHQ
+1、Moby@MobyHQ
 
 
 在公售前分析了前三个打新项目的投资机构后，判断这是一个背景和资源都非常不错的链上打新平台，公售时前端很卡，通过合约发现空签名也能打入，在30~33M市值范围参与了6个号共48个ETH，当时11.6万u，对应均价0.32左右。
@@ -435,9 +419,7 @@ x.com/0xsunnft/statu
 
 …
 
-2、Sheb 
-
-@sheboshis
+2、Sheb@sheboshis
 
 
 Shib官方的DN404项目，链上监控到合约部署后一直盯着，项目方设置错误导致公开Mint提前，单个成本0.05E，想了一下觉得非常值得一搏，果断花费32E印了640个，大部分时候排在持仓前3，NFT形式卖出约11E，后续项目方打开了代币授权开关但是没有添加池子，我怕其他散户加的池子太小不利于代币价格走势，又加了26E和300个代币到池子，目前LP手续费和区间收益22E，算上剩余代币价值，账面浮盈62E，大约19万u。
@@ -446,9 +428,7 @@ x.com/0xsunnft/statu
 
 …
 
-3、ASTX 
-
-@asterixlabs
+3、ASTX@asterixlabs
 
 
 DN404是ERC721A创始人Cygaar和Vectorized以及其他几位知名Dev合作完成的优化版ERC404协议，而ASTX是Vectorized自己的项目，也是第一个使用DN404协议的项目，这个信息在项目开盘前通过推特关注和合约部署时间已经被我们推测出来。
@@ -460,9 +440,7 @@ x.com/0xsunnft/statu
 
 …
 
-4、Portal 
-
-@Portalcoin
+4、Portal@Portalcoin
 
 
 不算是一个月内的操作，不过属于在这个月拿到的结果。大概三个月前参与的天使轮，当时判断项目质量和热度都很高，但是预售过程太随意，只需要通过网站打钱就行，任何人都能参与，导致很多人担心是Rug而错过了，我也是抱着尝试的心态投入了10E，当时约2万u，得到346.4k代币，目前场外成交价直逼3u，保守一点按2u计算的话，开盘释放15%部分收益为10.3万u。
@@ -472,9 +450,7 @@ x.com/0xsunnft/statu
 …
 
 
-5、Huhu 
-
-@HuhuCommunity
+5、Huhu@HuhuCommunity
 
 
 在做Merlin跨链任务的时候发现了Merlinswap上验证的土狗Huhu，随后通过链上信息判断大概率是跨链桥或Swap测试人员部署，在市值250k左右入场，最高点超过50倍，不过个人操作比较一般，因为购买的时候还看不到详细K线和池子大小，所以只买入0.04BTC左右，卖点判断也出现了失误，最终获利0.3BTC，大约1.5万u。后续Merlin链上的另一个Meme币Voya也表现出色，我也分号进行了参与，但是同样上的仓位比较小而且卖飞了，梅林链上的这两个土狗没能拿到大利润算是这个月比较遗憾的事。
@@ -484,9 +460,7 @@ x.com/0xsunnft/statu
 …
 
 
-6、Miner 
-
-@minerercx
+6、Miner@minerercx
 
 
 蹲DN404协议的意外收获，因为DN404协议延迟了一天发布，Miner的ERC-X正好出现在那天的空档，对Gas做了一些优化，我总共买入7ETH，卖出17ETH，获利3万u左右。比较可惜的是这个项目合约出现了漏洞，后续发展一般。
@@ -496,17 +470,13 @@ x.com/0xsunnft/statu
 …
 
 
-7、ChainGPT 
-
-@Chain_GPT
+7、ChainGPT@Chain_GPT
 
 
 类似Moby的逻辑，观察到这个平台的打新项目质量不错，而且最高档位只用3.5万u左右，性价比挺高，所以在0.25附近买入，目前币价0.37，利润约2万u。
 
 
-8、Moros  
-
-@morosnet
+8、Moros @morosnet
 
 
 这个也不属于一个月内的操作，但过程挺有意思，值得一讲。去年11月左右发现了Moros这个项目，是做AI概念进行项目孵化的，比较突出的点是他们孵化的第一个项目被YC的CEO陈嘉兴点赞过，所以我陆续花了20天共买入4E，结果表现不佳，最低点跌到只剩20%，不过我还是比较看好它的长期发展所以选择了拿住，在这个月随着AI的浪潮，Moros也被发掘，从2.6号的最低点到今天20天涨幅50倍，这种突然暴涨几十倍的币自己也在车上的感觉还是非常奇妙的，我也由亏损到获利，目前盈利2万u。
@@ -768,21 +738,13 @@ Never miss a lucky day if you're on everyday!
 复盘一下昨天结束的Simon Cat预售，堪称八月目前最大的确定性机会，我在社区里反复强调了大半个月，基本上踩对了每一个节奏，最终项目的表现更是超出预期，以下按时间顺序从做多、做空、参加预售三步进行总结。
 
 
-首先简单讲一下背景， 
+首先简单讲一下背景，@SimonsCatMeme
 
-@SimonsCatMeme
+ 是 Floki@RealFlokiInu
 
- 是 Floki 
+ 团队的新项目，拿到了@SimonsCat
 
-@RealFlokiInu
-
- 团队的新项目，拿到了 
-
-@SimonsCat
-
- 的IP，这两点就足以让它备受关注了，而这次很良心的是，$Cat的预售以25M的估值在 
-
-@tokenfi
+ 的IP，这两点就足以让它备受关注了，而这次很良心的是，$Cat的预售以25M的估值在@tokenfi
 
  的平台进行，也是这次机会的核心来源，假如直接开盘的话散户是基本没有机会吃到肉的。
 
@@ -877,13 +839,9 @@ Never miss a lucky day if you're on everyday!
 这个月也有很多不满意的操作，像Goat我0.85%的筹码但是因为担心AI胡言乱语而早早卖飞，Flavia和Tee两个AI代币高点利润80万u，没有选择止盈，最后倒亏10万u，特朗普赢得大选后的二级山寨行情也没把握好，只参与了一下Doge，这些都是要提升的地方，核心的一点是，不能以静态的观点看待行情或者项目，要随时根据新的消息面、基本面、资金面来调整预期，做出相应的操作。
 
 
-最近也有了很多新的思考和理解，像猫哥 
+最近也有了很多新的思考和理解，像猫哥@BitCloutCat
 
-@BitCloutCat
-
- 的小写Neiro、巫师哥 
-
-@0xcryptowizard
+ 的小写Neiro、巫师哥@0xcryptowizard
 
  的ACT，都是从早期开始宣传、建设社区，到中间经历波折币价一路下跌也没有放弃，最后迎来属于自己的奇迹，成功上线币安，拿到大结果，非常振奋人心。
 
@@ -1363,9 +1321,7 @@ Neiro犯了几个经典错误，第一个是这种级别的叙事，自己第一
 
 **内容**:
 
-你是主力球员吗 
-
-@gork
+你是主力球员吗@gork
 
 ---
 
